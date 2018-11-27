@@ -9,9 +9,6 @@ BUILD_SCRIPT="make_var_som_mx6_debian.sh"
 sudo apt-get update
 sudo apt-get install ${APT_PKGS}
 
-echo "OK"
-exit 0
-
 git clone ${REPO} -b ${BRANCH} ${BUILD_PATH}
 
 ( cd ${BUILD_PATH} && ./${BUILD_SCRIPT} -c deploy )
