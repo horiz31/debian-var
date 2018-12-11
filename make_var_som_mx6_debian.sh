@@ -42,8 +42,8 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="imx_4.9.88_2.0.0_ga-iris2-R0"
-readonly G_LINUX_KERNEL_REV="a2cc75c7c42772a1147557ff6018af11fc37ae44"
-readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_var_defconfig'
+readonly G_LINUX_KERNEL_REV="06b57d8fe2c131b9c85f76e14fa816802d5a76f6"
+readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb'
 
 ## uboot
