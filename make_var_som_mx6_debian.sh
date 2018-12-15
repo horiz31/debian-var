@@ -42,8 +42,8 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="imx_4.9.88_2.0.0_ga-iris2-R0"
-readonly G_LINUX_KERNEL_REV="06b57d8fe2c131b9c85f76e14fa816802d5a76f6"
-readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
+readonly G_LINUX_KERNEL_REV="a2cc75c7c42772a1147557ff6018af11fc37ae44"
+readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_var_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb'
 
 ## uboot
@@ -648,6 +648,19 @@ function make_tarbar() {
 	cd -
 }
 
+# make linux kernel defconfig
+# $1 -- cross compiler prefix
+# $2 -- linux defconfig file
+# $3 -- linux dirname
+# $4 -- out path
+function make_kernel_defconfig() {
+        pr_info "make kernel .config"
+        make ARCH=arm CROSS_COMPILE=${1} ${G_CROSS_COMPILER_JOPTION} -C ${3}/ ${2}
+
+        return 0;
+}
+
+
 # make linux kernel modules
 # $1 -- cross compiler prefix
 # $2 -- linux defconfig file
@@ -655,9 +668,6 @@ function make_tarbar() {
 # $4 -- linux dirname
 # $5 -- out path
 function make_kernel() {
-	pr_info "make kernel .config"
-	make ARCH=arm CROSS_COMPILE=${1} ${G_CROSS_COMPILER_JOPTION} -C ${4}/ ${2}
-
 	pr_info "make kernel"
 	make CROSS_COMPILE=${1} ARCH=arm ${G_CROSS_COMPILER_JOPTION} LOADADDR=0x10008000 -C ${4}/ uImage
 
@@ -669,6 +679,18 @@ function make_kernel() {
 	cp ${4}/arch/arm/boot/dts/*.dtb ${5}/;
 
 	return 0;
+}
+
+# make linux menuconfig
+# $1 -- cross compiler prefix
+# $2 -- linux defconfig file
+# $3 -- linux dirname
+# $4 -- out path
+function make_kernel_menuconfig() {
+        pr_info "make menuconfig"
+        make CROSS_COMPILE=${1} ARCH=arm ${G_CROSS_COMPILER_JOPTION} -C ${3} menuconfig
+
+        return 0;
 }
 
 # clean kernel
@@ -687,8 +709,8 @@ function clean_kernel() {
 # $3 -- linux dirname
 # $4 -- out modules path
 function make_kernel_modules() {
-	pr_info "make kernel defconfig"
-	make ARCH=arm CROSS_COMPILE=${1} ${G_CROSS_COMPILER_JOPTION} -C ${3} ${2}
+	#pr_info "make kernel defconfig"
+	#make ARCH=arm CROSS_COMPILE=${1} ${G_CROSS_COMPILER_JOPTION} -C ${3} ${2}
 
 	pr_info "Compiling kernel modules"
 	make ARCH=arm CROSS_COMPILE=${1} ${G_CROSS_COMPILER_JOPTION} -C ${3} modules
@@ -1176,6 +1198,15 @@ function cmd_make_uboot() {
 	return 0;
 }
 
+function cmd_make_kernel_defconfig() {
+        make_kernel_defconfig ${G_CROSS_COMPILER_PATH}/${G_CROSS_COMPILER_PREFIX} ${G_LINUX_KERNEL_DEF_CONFIG} ${G_LINUX_KERNEL_SRC_DIR} ${PARAM_OUTPUT_DIR} || {
+                pr_error "Failed #$? in function make_kernel_defconfig"
+                return 1;
+        };
+
+        return 0;
+}
+
 function cmd_make_kernel() {
 	make_kernel ${G_CROSS_COMPILER_PATH}/${G_CROSS_COMPILER_PREFIX} ${G_LINUX_KERNEL_DEF_CONFIG} "${G_LINUX_DTB}" ${G_LINUX_KERNEL_SRC_DIR} ${PARAM_OUTPUT_DIR} || {
 		pr_error "Failed #$? in function make_kernel"
@@ -1184,6 +1215,16 @@ function cmd_make_kernel() {
 
 	return 0;
 }
+
+function cmd_make_kernel_menuconfig() {
+        make_kernel_menuconfig ${G_CROSS_COMPILER_PATH}/${G_CROSS_COMPILER_PREFIX} ${G_LINUX_KERNEL_DEF_CONFIG}  ${G_LINUX_KERNEL_SRC_DIR} ${PARAM_OUTPUT_DIR} || {
+                pr_error "Failed #$? in function make_kernel_menuconfig"
+                return 1;
+        };
+
+        return 0;
+}
+
 
 function cmd_make_kmodules() {
 	make_prepare;
@@ -1223,6 +1264,15 @@ function cmd_make_sdcard() {
 	};
 
 	return 0;
+}
+
+function cmd_make_clean_kernel() {
+	## clean kernel, dtb, modules
+        clean_kernel ${G_LINUX_KERNEL_SRC_DIR} || {
+                pr_error "Failed #$? in function clean_kernel"
+                return 1;
+        };
+
 }
 
 function cmd_make_clean() {
@@ -1282,6 +1332,16 @@ case $PARAM_CMD in
 			V_RET_CODE=1;
 		};
 		;;
+	kernel_defconfig )
+                cmd_make_kernel_defconfig || {
+                        V_RET_CODE=1;
+                };
+                ;;
+	kernel_menuconfig )
+                cmd_make_kernel_menuconfig || {
+                        V_RET_CODE=1;
+                };
+                ;;
 	modules )
 		cmd_make_kmodules || {
 			V_RET_CODE=1;
@@ -1299,6 +1359,7 @@ case $PARAM_CMD in
 		;;
 	all )
 		(cmd_make_uboot  &&
+		 cmd_make_kernel_defconfig &&
 		 cmd_make_kernel &&
 		 cmd_make_kmodules &&
 		 cmd_make_rootfs) || {
@@ -1307,6 +1368,11 @@ case $PARAM_CMD in
 		;;
 	clean )
 		cmd_make_clean || {
+			V_RET_CODE=1;
+		};
+		;;
+	clean_kernel )
+		cmd_make_clean_kernel || {
 			V_RET_CODE=1;
 		};
 		;;
