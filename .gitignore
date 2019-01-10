@@ -65,7 +65,7 @@ GTAGS
 
 # ignored dirs
 rootfs
-output
+output*
 src
 toolchain
 tmp
