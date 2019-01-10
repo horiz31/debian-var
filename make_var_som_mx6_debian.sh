@@ -315,7 +315,7 @@ function make_debian_rootfs() {
 	umount ${ROOTFS_BASE}/{sys,proc,dev/pts,dev} 2>/dev/null && :;
 
 ## clear rootfs dir
-	rm -rf ${ROOTFS_BASE}/* && :;
+###	rm -rf ${ROOTFS_BASE}/* && :;
 
 	pr_info "rootfs: debootstrap"
 	debootstrap --verbose --foreign --arch armhf ${DEB_RELEASE} ${ROOTFS_BASE}/ ${PARAM_DEB_LOCAL_MIRROR}
@@ -1288,6 +1288,10 @@ function cmd_make_clean() {
 		pr_error "Failed #$? in function clean_uboot"
 		return 2;
 	};
+
+	## clean rootfs
+	pr_info "Delete rootfs ${ROOTFS_BASE}"
+	rm -rf ${ROOTFS_BASE}/* && :;
 
 	## delete tmp dirs and etc
 	pr_info "Delete tmp dir ${G_TMP_DIR}"
