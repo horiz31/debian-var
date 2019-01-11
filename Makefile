@@ -46,9 +46,11 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
 
 $(OUTPUT)/sd.img: $(SRC) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
-	dd if=/dev/zero of=$@ bs=1G count=$(SD_SIZE_IN_GB)
-	$(SUDO) losetup -f $@
-	dev=$(shell losetup -l | grep $@ | cut -f1 -d' ') && $(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev
+	dd if=/dev/zero of=$@ bs=1G count=$(SD_SIZE_IN_GB) && \
+		$(SUDO) losetup -f $@ && \
+		x=$(shell losetup -l | grep $@ | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && \
+		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
+		$(SUDO) losetup -d $@
 
 $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
