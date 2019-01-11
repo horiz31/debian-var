@@ -26,7 +26,7 @@ REFERENCE=imx_4.9.88_2.0.0_ga-var01
 SCRIPT_NAME=make_var_som_mx6_debian.sh
 SD_SIZE_IN_GB=4
 SRC=$(CURDIR)/src
-SRC_DTSI=$(SRC)/kernel/arch/arm/boot/dts/imx6qdl-var-dart.dtsi
+DTSI=$(SRC)/kernel/arch/arm/boot/dts/imx6qdl-var-dart.dtsi
 
 # https://stackoverflow.com/questions/16488581/looking-for-well-logged-make-output
 # Invoke this with $(call LOG,<cmdline>)
@@ -59,6 +59,9 @@ $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
 
 $(OUTPUT)/$(MACHINE).dts: $(OUTPUT)/$(MACHINE).dtb
 	dtc -I dtb -O dts -o $@ $<
+
+$(OUTPUT)/$(shell basename $(DTSI)): $(SRC) $(DTSI)
+	cp $(DTSI) $@
 
 $(OUTPUT)/$(shell basename $(DTSI) .dtsi).patch: $(SRC)
 	( cd $(shell dirname $(DTSI)) && git diff $(REFERENCE) $(shell basename $(DTSI)) > $@ )
