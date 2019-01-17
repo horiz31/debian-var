@@ -44,16 +44,19 @@ default: usage
 $(LOGDIR):
 	mkdir -p $(LOGDIR)
 
+$(OUTPUT):
+	mkdir -p $(OUTPUT)
+
 $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 	$(SUDO) ./$(SCRIPT_NAME) -c rootfs
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
 
-$(OUTPUT)/sd.img: $(SRC) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
+$(OUTPUT)/sd.img: $(SRC) $(OUTPUT) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
 	dd if=/dev/zero of=$@ bs=1G count=$(SD_SIZE_IN_GB) && \
 		$(SUDO) losetup -f $@ && \
 		x=$(shell losetup -l | grep $@ | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && \
 		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
-		$(SUDO) losetup -d $@
+		$(SUDO) losetup -d $$dev
 
 $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
@@ -61,19 +64,19 @@ $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
 $(OUTPUT)/$(MACHINE).dts: $(OUTPUT)/$(MACHINE).dtb
 	dtc -I dtb -O dts -o $@ $<
 
-$(OUTPUT)/$(shell basename $(DTSI)): $(SRC) $(DTSI)
+$(OUTPUT)/$(shell basename $(DTSI)): $(SRC) $(OUTPUT) $(DTSI)
 	cp $(DTSI) $@
 
-$(OUTPUT)/$(shell basename $(DTSI) .dtsi).patch: $(SRC)
+$(OUTPUT)/$(shell basename $(DTSI) .dtsi).patch: $(SRC) $(OUTPUT)
 	( cd $(shell dirname $(DTSI)) && git diff $(REFERENCE) $(shell basename $(DTSI)) > $@ )
 
-$(OUTPUT)/uImage: $(SRC) $(SRC)/kernel/.config
+$(OUTPUT)/uImage: $(SRC) $(OUTPUT) $(SRC)/kernel/.config
 	$(SUDO) ./$(SCRIPT_NAME) -c kernel
 
-$(OUTPUT)/u-boot.img.mmc: $(SRC)
+$(OUTPUT)/u-boot.img.mmc: $(SRC) $(OUTPUT)
 	$(SUDO) ./$(SCRIPT_NAME) -c bootloader
 
-$(SRC):
+$(SRC): $(OUTPUT)
 	$(SUDO) ./$(SCRIPT_NAME) -c deploy
 
 $(SRC)/kernel/.config: $(SRC) $(DEFCONFIG)
@@ -102,6 +105,7 @@ build-sdcard: $(LOGDIR)
 clean:
 	-$(SUDO) rm -f $(LOGDIR)/build.log $(LOGDIR)/make.log
 	-$(SUDO) rm -f $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
+	-( x=$(shell losetup -l | grep $(OUTPUT)/sd.img | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && $(SUDO) losetup -d $$dev )
 
 deps:
 	$(SUDO) apt-get update
