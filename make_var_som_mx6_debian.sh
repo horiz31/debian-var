@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5"
+readonly SCRIPT_VERSION="0.5.1"
 
 
 #### Exports Variables ####
@@ -43,7 +43,7 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="bc631b2fc7991d1e96be01a3a725ca04295348a0"
+readonly G_LINUX_KERNEL_REV="2a88e20a8b414a21f5af5415daba033865298103"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
 
