@@ -51,12 +51,12 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 	$(SUDO) ./$(SCRIPT_NAME) -c rootfs
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
 
-$(OUTPUT)/sd.img: $(SRC) $(OUTPUT) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
-	dd if=/dev/zero of=$@ bs=1G count=$(SD_SIZE_IN_GB) && \
-		$(SUDO) losetup -f $@ && \
-		x=$(shell losetup -l | grep $@ | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && \
-		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
-		$(SUDO) losetup -d $$dev
+#$(OUTPUT)/sd.img: $(SRC) $(OUTPUT) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
+#	dd if=/dev/zero of=$@ bs=1G count=$(SD_SIZE_IN_GB) && \
+#		$(SUDO) losetup -f $@ && \
+#		x=$(shell losetup -l | grep $@ | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && \
+#		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
+#		$(SUDO) losetup -d $$dev
 
 $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
@@ -85,7 +85,7 @@ $(SRC)/kernel/.config: $(SRC) $(DEFCONFIG)
 all: $(LOGDIR)
 	$(call LOG, $(MAKE) deps )
 	$(call LOG, $(MAKE) see )
-	$(call LOG, $(MAKE) $(OUTPUT)/sd.img )
+	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
@@ -99,13 +99,14 @@ build-modules: $(LOGDIR)
 build-rootfs: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
-build-sdcard: $(LOGDIR)
-	$(call LOG, $(MAKE) $(OUTPUT)/sd.img )
+build-sdcard: $(LOGDIR) $(SRC) $(OUTPUT)/rootfs.tar.gz
+#	$(call LOG, $(MAKE) $(OUTPUT)/sd.img )
+	@echo "Use: \"$(SUDO) ./$(SCRIPT_NAME) -c sdcard /dev/sdX\" to flash the image."
 
 clean:
 	-$(SUDO) rm -f $(LOGDIR)/build.log $(LOGDIR)/make.log
 	-$(SUDO) rm -f $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
-	-( x=$(shell losetup -l | grep $(OUTPUT)/sd.img | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && $(SUDO) losetup -d $$dev )
+#	-( x=$(shell losetup -l | grep $(OUTPUT)/sd.img | cut -f1 -d' ') && dev=$${x:=/dev/loop0} && $(SUDO) losetup -d $$dev )
 
 deps:
 	$(SUDO) apt-get update
@@ -150,7 +151,7 @@ see:
 	@echo "CPUS=$(CPUS)"
 	@echo "SUDO=$(SUDO)"
 	@echo "*** Build Commands ***"
-	@$(MAKE) --no-print-directory -n $(OUTPUT)/sd.img
+	@$(MAKE) --no-print-directory -n $(OUTPUT)/rootfs.tar.gz
 	@echo "**********************"
 	@echo "Use: \"make all\" to perform this build"
 
@@ -165,7 +166,7 @@ define USAGE
 	@echo "    kernel      -- just the kernel image"
 	@echo "    modules     -- just the modules and the .dtb files"
 	@echo "    rootfs      -- just root filesystem"
-	@echo "    sdcard      -- produce the sdcard image"
+#	@echo "    sdcard      -- produce the sdcard image"
 	@echo "  clean         -- remove build artifacts"
 	@echo "  deps          -- ensure OS has required dependencies installed"
 	@echo "  docker-<command>"
