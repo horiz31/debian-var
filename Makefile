@@ -27,6 +27,7 @@ SCRIPT_NAME=make_var_som_mx6_debian.sh
 SD_SIZE_IN_GB=4
 SRC=$(CURDIR)/src
 DTSI=$(SRC)/kernel/arch/arm/boot/dts/imx6qdl-var-dart.dtsi
+DEFCONFIG=$(SRC)/kernel/arch/arm/configs/imx_v7_iris2_defconfig	# matches G_LINUX_KERNEL_DEF_CONFIG
 
 # https://stackoverflow.com/questions/16488581/looking-for-well-logged-make-output
 # Invoke this with $(call LOG,<cmdline>)
@@ -66,7 +67,7 @@ $(OUTPUT)/$(shell basename $(DTSI)): $(SRC) $(DTSI)
 $(OUTPUT)/$(shell basename $(DTSI) .dtsi).patch: $(SRC)
 	( cd $(shell dirname $(DTSI)) && git diff $(REFERENCE) $(shell basename $(DTSI)) > $@ )
 
-$(OUTPUT)/uImage: $(SRC)
+$(OUTPUT)/uImage: $(SRC) $(SRC)/kernel/.config
 	$(SUDO) ./$(SCRIPT_NAME) -c kernel
 
 $(OUTPUT)/u-boot.img.mmc: $(SRC)
@@ -74,6 +75,9 @@ $(OUTPUT)/u-boot.img.mmc: $(SRC)
 
 $(SRC):
 	$(SUDO) ./$(SCRIPT_NAME) -c deploy
+
+$(SRC)/kernel/.config: $(SRC) $(DEFCONFIG)
+	$(SUDO) ./$(SCRIPT_NAME) -c kernel_defconfig
 
 all: $(LOGDIR)
 	$(call LOG, $(MAKE) deps )
