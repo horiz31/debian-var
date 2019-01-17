@@ -14,6 +14,7 @@
 set -e
 
 SCRIPT_NAME=${0##*/}
+CPUS=`nproc`
 readonly SCRIPT_VERSION="0.5"
 
 
@@ -42,9 +43,9 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="cfd055a1384742a290f4038e826c0d62f93994c4"
+readonly G_LINUX_KERNEL_REV="bc631b2fc7991d1e96be01a3a725ca04295348a0"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
-readonly G_LINUX_DTB='imx6q-var-dart.dtb'
+readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
@@ -124,7 +125,7 @@ readonly G_CROSS_COMPILER_NAME="gcc-linaro-6.3.1-2017.05-x86_64_arm-linux-gnueab
 readonly G_CROSS_COMPILER_ARCHIVE="${G_CROSS_COMPILER_NAME}.tar.xz"
 readonly G_CROSS_COMPILER_PATH="${G_TOOLS_PATH}/${G_CROSS_COMPILER_NAME}/bin"
 readonly G_CROSS_COMPILER_PREFIX="arm-linux-gnueabihf-"
-readonly G_CROSS_COMPILER_JOPTION="-j 4"
+readonly G_CROSS_COMPILER_JOPTION="-j ${CPUS}"
 readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/${G_CROSS_COMPILER_ARCHIVE}"
 
 ############## user rootfs packages ##########
