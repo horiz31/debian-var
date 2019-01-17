@@ -37,7 +37,7 @@ define LOG
 endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
-.PHONY: all clean deps docker-deploy docker-image id locale see usage
+.PHONY: all clean deps docker-deploy docker-image id locale mrproper see usage
 
 default: usage
 
@@ -100,8 +100,8 @@ build-sdcard: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/sd.img )
 
 clean:
-	-rm -f $(LOGDIR)/build.log $(LOGDIR)/make.log
-	-rm -f $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
+	-$(SUDO) rm -f $(LOGDIR)/build.log $(LOGDIR)/make.log
+	-$(SUDO) rm -f $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
 
 deps:
 	$(SUDO) apt-get update
@@ -138,6 +138,9 @@ locale:
 	$(SUDO) apt-get install locales
 	$(SUDO) locale-gen $(LANG)
 	$(SUDO) update-locale LC ALL=$(LANG) LANG=$(LANG)
+
+mrproper: clean
+	-$(SUDO) rm -rf log output rootfs src tmp toolchain
 
 see:
 	@echo "CPUS=$(CPUS)"
