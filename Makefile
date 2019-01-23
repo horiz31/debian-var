@@ -85,6 +85,8 @@ $(SRC)/kernel/.config: $(SRC) $(DEFCONFIG)
 all: $(LOGDIR)
 	$(call LOG, $(MAKE) deps )
 	$(call LOG, $(MAKE) see )
+	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
+	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
 build-bootloader: $(LOGDIR)
