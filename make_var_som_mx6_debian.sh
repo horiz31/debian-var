@@ -43,7 +43,7 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="377907c20cf803796270d489f9e67f3227f3a0c7"
+readonly G_LINUX_KERNEL_REV="50951160cbfcaf1488c8e2a02d12c39bc5af31df"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
 
