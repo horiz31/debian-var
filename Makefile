@@ -93,9 +93,10 @@ all: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
 archive:
-	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)
-	mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
-	mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)/dts
+	-mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	@( for f in $(OUTPUT)/*.dtb ; do n=$$(basename $$f) ; nb=$${n%.*} ; dtc -I dtb -O dts -o $(ARCHIVE)/$(PROJECT)-$(DATE)/dts/$${nb}.dts $$f ; done )
+	-mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
 	tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
 
 build-bootloader: $(LOGDIR)
