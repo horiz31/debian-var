@@ -5,6 +5,8 @@ SHELL := /bin/bash
 CPUS := $(shell nproc)
 SUDO := $(shell test $${EUID} -ne 0 && echo "sudo")
 LANG := en_US.UTF-8
+DATE := $(shell date --iso-8601)
+ARCHIVE := $(HOME)/data
 .EXPORT_ALL_VARIABLES:
 
 LOGDIR=$(CURDIR)/log
@@ -38,6 +40,7 @@ endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
 .PHONY: all clean deps docker-deploy docker-image id locale mrproper see usage
+.PHONY: archive
 
 default: usage
 
@@ -88,6 +91,12 @@ all: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
+
+archive:
+	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)
+	mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
@@ -152,6 +161,7 @@ mrproper: clean
 see:
 	@echo "CPUS=$(CPUS)"
 	@echo "SUDO=$(SUDO)"
+	@echo "ARCHIVE-TO=$(ARCHIVE)/$(PROJECT)-$(DATE)"
 	@echo "*** Build Commands ***"
 	@$(MAKE) --no-print-directory -n $(OUTPUT)/rootfs.tar.gz
 	@echo "**********************"
