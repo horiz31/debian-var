@@ -42,10 +42,10 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="480a41ebc91c6301693369d5c44042e72273173a"
+readonly G_LINUX_KERNEL_BRANCH="feature/debian-yocto-support"
+readonly G_LINUX_KERNEL_REV="9af28698b83d232c549eee3ef96449cae878cea2"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
-readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
+readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
