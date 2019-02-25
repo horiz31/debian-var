@@ -42,10 +42,10 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="480a41ebc91c6301693369d5c44042e72273173a"
+readonly G_LINUX_KERNEL_BRANCH="imx_4.9.88_2.0.0_ga-iris2-R0"
+readonly G_LINUX_KERNEL_REV="3de9a89f4ece74b7d3777f197ced1322aecbf437"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
-readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
+readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
@@ -129,7 +129,7 @@ readonly G_CROSS_COMPILER_JOPTION="-j ${CPUS}"
 readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/${G_CROSS_COMPILER_ARCHIVE}"
 
 ############## user rootfs packages ##########
-readonly G_USER_PACKAGES=""
+readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
