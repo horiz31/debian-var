@@ -133,6 +133,7 @@ readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev 
 readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_LOGINS=""	# was "user x_user" before
+readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -144,7 +145,7 @@ PARAM_BLOCK_DEVICE="na"
 ### usage ###
 function usage() {
 	echo "This program version ${SCRIPT_VERSION}"
-	echo " Used for make debian(${DEB_RELEASE}) image for \"var-som-mx6\" board"
+	echo " Used for make debian(${DEB_RELEASE}) image for \"${G_USER_HOSTNAME}\" board"
 	echo " and create booted sdcard"
 	echo ""
 	echo "Usage:"
@@ -357,7 +358,7 @@ echo "
 # /dev/mmcblk0p1  /boot           vfat    defaults        0       0
 " > etc/fstab
 
-echo "var-som-mx6" > etc/hostname
+echo "${G_USER_HOSTNAME}" > etc/hostname
 
 echo "auto lo
 iface lo inet loopback
