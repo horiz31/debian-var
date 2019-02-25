@@ -99,6 +99,7 @@ archive:
 	-mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
 	$(SUDO) tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
 	$(SUDO) chown $(USER):$(USER) $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz
+	@cp $(SCRIPT_NAME) $(ARCHIVE)/$(PROJECT)-$(DATE)
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
