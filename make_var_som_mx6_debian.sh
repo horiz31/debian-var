@@ -383,6 +383,10 @@ chmod +x ${ROOTFS_BASE}/usr/sbin/policy-rc.d
 ## third packages stage
 cat > third-stage << EOF
 #!/bin/bash
+# FIXME: a modal window comes up regarding a local modification to sshd_config
+# but there is no difference.  Try to suppress the dialog by deleting the file...
+rm ${ROOTFS_BASE}/etc/ssh/sshd_config
+
 # apply debconfig options
 debconf-set-selections /debconf.set
 rm -f /debconf.set
