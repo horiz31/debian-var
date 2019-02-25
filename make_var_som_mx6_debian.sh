@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.1"
+readonly SCRIPT_VERSION="0.5.2"
 
 
 #### Exports Variables ####
@@ -130,6 +130,9 @@ readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolch
 
 ############## user rootfs packages ##########
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
+readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
+readonly G_USER_PUBKEY="root.pub"
+readonly G_USER_LOGINS=""	# was "user x_user" before
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -137,7 +140,6 @@ PARAM_OUTPUT_DIR="${DEF_BUILDENV}/output"
 PARAM_DEBUG="0"
 PARAM_CMD="all"
 PARAM_BLOCK_DEVICE="na"
-
 
 ### usage ###
 function usage() {
@@ -399,7 +401,7 @@ function protected_install() {
 
         echo ""
         echo "###########################"
-        echo "## Fix missing packeges ###"
+        echo "## Fix missing packages ###"
         echo "###########################"
         echo ""
 
@@ -408,7 +410,6 @@ function protected_install() {
 
     return \${RET_CODE}
 }
-
 
 # update packages and install base
 apt-get update || apt-get update
@@ -420,9 +421,6 @@ protected_install nfs-common
 
 # packages required when flashing emmc
 protected_install dosfstools
-
-# fix config for sshd (permit root login)
-sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
 
 # enable graphical desktop
 protected_install xorg
@@ -442,10 +440,6 @@ protected_install network-manager-gnome
 
 # net-tools (ifconfig, etc.)
 protected_install net-tools
-
-## fix lightdm config (added autologin x_user) ##
-sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
-sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
 
 # added alsa & alsa utilites
 protected_install alsa-utils
@@ -498,22 +492,68 @@ rm -rf /var/cache/man/??_*
 # Remove document files
 rm -rf /usr/share/doc
 
-# create users and set password
-useradd -m -G audio -s /bin/bash user
-useradd -m -G audio -s /bin/bash x_user
-usermod -a -G video user
-usermod -a -G video x_user
-echo "user:user" | chpasswd
-echo "root:root" | chpasswd
-passwd -d x_user
-
-# sado kill
+# self kill
 rm -f third-stage
 EOF
 
 	pr_info "rootfs: install selected debian packages (third-stage)"
 	chmod +x third-stage
 	LANG=C chroot ${ROOTFS_BASE} /third-stage
+
+# secure config for sshd
+[ "${G_USER_PUBKEY}" != "" ] && {
+
+	pr_info "rootfs: secure ssh"
+cat > ${ROOTFS_BASE}/etc/ssh/sshd_config << EOF
+PermitRootLogin yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM no
+X11Forwarding yes
+PrintMotd no
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+EOF
+
+mkdir -p ${ROOTFS_BASE}/root/.ssh
+cp ${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
+chmod 600 ${ROOTFS_BASE}/root/.ssh/authorized_keys
+chmod 700 ${ROOTFS_BASE}/root/.ssh
+
+};
+
+# create additional logins
+cat > third-stage-user-logins << EOF
+#!/bin/bash
+
+function create_user() {
+    useradd -m -G audio -s /bin/bash ${1}
+    usermod -a -G video ${1}
+    echo "${1}:${1}" | chpasswd
+}
+
+# create users and set password
+for u in ${G_USER_LOGINS} ;
+do
+    create_user ${u}
+    if [ "${u}" == "x_user" ] ;
+    then
+        ## fix lightdm config (added autologin x_user) ##
+        sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
+        sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
+        passwd -d x_user
+    fi
+done
+
+# self kill
+rm -f third-stage-user-logins
+EOF
+
+	pr_info "rootfs: create user logins (third-stage)"
+	chmod +x third-stage-user-logins
+	LANG=C chroot ${ROOTFS_BASE} /third-stage-user-logins
 
 ## fourth-stage ##
 ### install variscite-bluetooth init script
@@ -527,7 +567,8 @@ EOF
 	pr_info "rootfs: install user defined packages (user-stage)"
 	pr_info "rootfs: G_USER_PACKAGES \"${G_USER_PACKAGES}\" "
 
-echo "#!/bin/bash
+cat > user-stage << EOF
+#!/bin/bash
 # update packages
 apt-get update
 
@@ -535,10 +576,32 @@ apt-get update
 apt-get -y install ${G_USER_PACKAGES}
 
 rm -f user-stage
-" > user-stage
+EOF
 
 	chmod +x user-stage
 	LANG=C chroot ${ROOTFS_BASE} /user-stage
+
+};
+
+[ "${G_USER_PYTHONPKGS}" != "" ] && {
+
+	pr_info "rootfs: install user python packages (user-stage)"
+	pr_info "rootfs: G_USER_PYTHONPKGS \"${G_USER_PYTHONPKGS}\" "
+
+cat > user-python-stage << EOF
+#!/bin/bash
+# update packages
+apt-get update
+
+# install all user packages
+apt-get -y install python-pip
+pip install ${G_USER_PYTHONPKGS}
+
+rm -f user-python-stage
+EOF
+
+	chmod +x user-python-stage
+	LANG=C chroot ${ROOTFS_BASE} /user-python-stage
 
 };
 
