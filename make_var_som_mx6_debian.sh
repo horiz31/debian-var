@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.2"
+readonly SCRIPT_VERSION="0.5.3"
 
 
 #### Exports Variables ####
@@ -127,6 +127,19 @@ readonly G_CROSS_COMPILER_PATH="${G_TOOLS_PATH}/${G_CROSS_COMPILER_NAME}/bin"
 readonly G_CROSS_COMPILER_PREFIX="arm-linux-gnueabihf-"
 readonly G_CROSS_COMPILER_JOPTION="-j ${CPUS}"
 readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/${G_CROSS_COMPILER_ARCHIVE}"
+
+############## base rootfs packages ##########
+readonly G_BASE_PACKAGES="locales ntp openssh-server nfs-common dosfstools network-manager net-tools alsa-utils gstreamer1.0-alsa i2c-tools usbutils iperf audacious mtd-utils bluetooth bluez-obexd bluez-tools blueman gconf2 hostapd udhcpd can-utils"
+readonly G_BASE_REMOVE="hddtemp"
+
+# sound mixer & volume
+# xfce-mixer is not part of Stretch since the stable version depends on
+# gstreamer-0.10, no longer used
+# Stretch now uses PulseAudio and xfce4-pulseaudio-plugin is included in
+# Xfce desktop and can be added to Xfce panels.
+## Add xfce4-mixer xfce4-volumed parole
+readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
+readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
@@ -386,7 +399,9 @@ cat > third-stage << EOF
 #!/bin/bash
 # FIXME: a modal window comes up regarding a local modification to sshd_config
 # but there is no difference.  Try to suppress the dialog by deleting the file...
-rm ${ROOTFS_BASE}/etc/ssh/sshd_config
+rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
+# FIXME: same thing with lightdm.conf
+rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 # apply debconfig options
 debconf-set-selections /debconf.set
@@ -419,72 +434,20 @@ function protected_install() {
 # update packages and install base
 apt-get update || apt-get update
 
-protected_install locales
-protected_install ntp
-protected_install openssh-server
-protected_install nfs-common
-
-# packages required when flashing emmc
-protected_install dosfstools
-
-# enable graphical desktop
-protected_install xorg
-protected_install xfce4
-protected_install xfce4-goodies
-
-# sound mixer & volume
-# xfce-mixer is not part of Stretch since the stable versionit depends on
-# gstreamer-0.10, no longer used
-# Stretch now uses PulseAudio and xfce4-pulseaudio-plugin is included in
-# Xfce desktop and can be added to Xfce panels.
-#protected_install xfce4-mixer
-#protected_install xfce4-volumed
-
-# network manager
-protected_install network-manager-gnome
-
-# net-tools (ifconfig, etc.)
-protected_install net-tools
-
-# added alsa & alsa utilites
-protected_install alsa-utils
-protected_install gstreamer1.0-alsa
-
-# added i2c tools
-protected_install i2c-tools
-
-# added usb tools
-protected_install usbutils
-
-# added net tools
-protected_install iperf
-
-#media
-protected_install audacious
-# protected_install parole
-
-# mtd
-protected_install mtd-utils
-
-# bluetooth
-protected_install bluetooth
-protected_install bluez-obexd
-protected_install bluez-tools
-protected_install blueman
-protected_install gconf2
-
-# wifi support packages
-protected_install hostapd
-protected_install udhcpd
-
-# can support
-protected_install can-utils
+for u in ${G_BASE_PACKAGES} ;
+do
+    protected_install ${u}
+done
+for u in ${G_XORG_PACKAGES} ;
+do
+    protected_install ${u}
+done
 
 # delete unused packages ##
-apt-get -y remove xserver-xorg-video-ati
-apt-get -y remove xserver-xorg-video-radeon
-apt-get -y remove hddtemp
-
+for u in ${G_XORG_REMOVE} ${G_BASE_REMOVE} ;
+do
+    apt-get -y remove ${u}
+done
 apt-get -y autoremove
 
 # Remove foreign man pages and locales
