@@ -97,7 +97,8 @@ archive:
 	-mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
 	@( for f in $(OUTPUT)/*.dtb ; do n=$$(basename $$f) ; nb=$${n%.*} ; dtc -I dtb -O dts -o $(ARCHIVE)/$(PROJECT)-$(DATE)/dts/$${nb}.dts $$f ; done )
 	-mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
-	tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
+	$(SUDO) tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
+	$(SUDO) chown $(USER):$(USER) $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
