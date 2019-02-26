@@ -405,13 +405,12 @@ rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 function protected_install() {
-    local _name=\${1}
     local repeated_cnt=5;
     local RET_CODE=1;
 
     for (( c=0; c<\${repeated_cnt}; c++ ))
     do
-        apt-get install -y \${_name} && {
+        apt-get install -y ${*} && {
             RET_CODE=0;
             break;
         };
@@ -436,20 +435,10 @@ protected_install debconf
 debconf-set-selections /debconf.set
 rm -f /debconf.set
 
-for u in ${G_BASE_PACKAGES} ;
-do
-    protected_install ${u}
-done
-for u in ${G_XORG_PACKAGES} ;
-do
-    protected_install ${u}
-done
+protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
 
 # delete unused packages ##
-for u in ${G_XORG_REMOVE} ${G_BASE_REMOVE} ;
-do
-    apt-get -y remove ${u}
-done
+apt-get remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
 apt-get -y autoremove
 
 # Remove foreign man pages and locales
@@ -491,7 +480,7 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 EOF
 
 mkdir -p ${ROOTFS_BASE}/root/.ssh
-cp ${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
+cp ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
 chmod 600 ${ROOTFS_BASE}/root/.ssh/authorized_keys
 chmod 700 ${ROOTFS_BASE}/root/.ssh
 
@@ -501,7 +490,7 @@ chmod 700 ${ROOTFS_BASE}/root/.ssh
 [ "${G_USER_POSTINSTALL}" != "" ] && {
 
 	pr_info "rootfs: copy setup script"
-	cp ${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
+	cp ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
 	chmod +x ${ROOTFS_BASE}/root/${G_USER_POSTINSTALL}
 
 };
