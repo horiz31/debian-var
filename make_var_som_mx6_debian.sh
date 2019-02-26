@@ -395,6 +395,21 @@ EOF
 
 chmod +x ${ROOTFS_BASE}/usr/sbin/policy-rc.d
 
+## apt-fast configuration
+echo "
+_APTMGR=apt-get
+DOWNLOADBEFORE=true
+_MAXNUM=20
+_MAXCONPERSRV=10
+_SPLITCON=8
+_MINSPLITSZ=1M
+_PIECEALGO=default
+DLLIST='/tmp/apt-fast.list'
+_DOWNLOADER='aria2c --no-conf -c -j ${_MAXNUM} -x ${_MAXCONPERSRV} -s ${_SPLITCON} --min-split-size=${_MINSPLITSZ} --stream-piece-selector=${_PIECEALGO} -i ${DLLIST} --connect-timeout=600 --timeout=600 -m0 --header \"Accept: */*\"'
+DLDIR='/var/cache/apt/apt-fast'
+APTCACHE='/var/cache/apt/archives'
+" > etc/apt-fast.conf
+
 ## third packages stage
 cat > third-stage << EOF
 #!/bin/bash
@@ -404,13 +419,18 @@ rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
 # FIXME: same thing with lightdm.conf
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
+# https://github.com/ilikenwf/apt-fast
+apt-get update
+apt-get install -y aria2
+/bin/bash -c "$(curl -sL https://git.io/vokNn)"
+
 function protected_install() {
     local repeated_cnt=5;
     local RET_CODE=1;
 
     for (( c=0; c<\${repeated_cnt}; c++ ))
     do
-        apt-get install -y ${*} && {
+        apt-fast install -y ${*} && {
             RET_CODE=0;
             break;
         };
@@ -428,7 +448,7 @@ function protected_install() {
 }
 
 # update packages and install base
-apt-get update || apt-get update
+apt-fast update
 protected_install debconf
 
 # apply debconfig options
@@ -438,8 +458,8 @@ rm -f /debconf.set
 protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
 
 # delete unused packages ##
-apt-get remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
-apt-get -y autoremove
+apt-fast remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
+apt-fast -y autoremove
 
 # Remove foreign man pages and locales
 rm -rf /usr/share/man/??
@@ -541,10 +561,10 @@ EOF
 cat > user-stage << EOF
 #!/bin/bash
 # update packages
-apt-get update
+apt-fast update
 
 # install all user packages
-apt-get -y install ${G_USER_PACKAGES}
+apt-fast -y install ${G_USER_PACKAGES}
 
 rm -f user-stage
 EOF
@@ -562,10 +582,10 @@ EOF
 cat > user-python-stage << EOF
 #!/bin/bash
 # update packages
-apt-get update
+apt-fast update
 
 # install all user packages
-apt-get -y install python-pip
+apt-fast -y install python-pip
 pip install ${G_USER_PYTHONPKGS}
 
 rm -f user-python-stage
@@ -635,9 +655,9 @@ EOF
 ## install iMX VPU libs
 	LANG=C LC_ALL=C chroot ${ROOTFS_BASE} /chroot_script_gst.sh
 
-## clenup command
+## cleanup command
 echo "#!/bin/bash
-apt-get clean
+apt-fast clean
 rm -f cleanup
 " > cleanup
 
