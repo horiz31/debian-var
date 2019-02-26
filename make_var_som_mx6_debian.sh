@@ -145,6 +145,7 @@ readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
 readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
 readonly G_USER_PUBKEY="root.pub"
+readonly G_USER_POSTINSTALL="setup.sh"
 readonly G_USER_LOGINS=""	# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
@@ -489,6 +490,15 @@ mkdir -p ${ROOTFS_BASE}/root/.ssh
 cp ${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
 chmod 600 ${ROOTFS_BASE}/root/.ssh/authorized_keys
 chmod 700 ${ROOTFS_BASE}/root/.ssh
+
+};
+
+# post-install configuration script
+[ "${G_USER_POSTINSTALL}" != "" ] && {
+
+	pr_info "rootfs: copy setup script"
+	cp ${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
+	chmod +x ${ROOTFS_BASE}/root/${G_USER_POSTINSTALL}
 
 };
 
