@@ -404,10 +404,6 @@ rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
 # FIXME: same thing with lightdm.conf
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
-# apply debconfig options
-debconf-set-selections /debconf.set
-rm -f /debconf.set
-
 function protected_install() {
     local _name=\${1}
     local repeated_cnt=5;
@@ -434,6 +430,11 @@ function protected_install() {
 
 # update packages and install base
 apt-get update || apt-get update
+protected_install debconf
+
+# apply debconfig options
+debconf-set-selections /debconf.set
+rm -f /debconf.set
 
 for u in ${G_BASE_PACKAGES} ;
 do
