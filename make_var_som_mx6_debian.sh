@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.3"
+readonly SCRIPT_VERSION="0.5.4"
 
 
 #### Exports Variables ####
@@ -49,9 +49,9 @@ readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
-readonly G_UBOOT_GIT="https://github.com/varigit/uboot-imx.git"
-readonly G_UBOOT_BRANCH="imx_v2017.03_4.9.11_1.0.0_ga_var01"
-readonly G_UBOOT_REV="466898df5360675516bf1f014e5d48e507ae5c95"
+readonly G_UBOOT_GIT="https://github.com/uvdl/uboot-imx.git"
+readonly G_UBOOT_BRANCH="iris2"
+readonly G_UBOOT_REV="45b9d855c51753bc667de946c60d48f5b9c2f677"
 readonly G_UBOOT_DEF_CONFIG_MMC='mx6var_som_sd_config'
 readonly G_UBOOT_DEF_CONFIG_NAND='mx6var_som_nand_config'
 readonly G_UBOOT_NAME_FOR_EMMC='u-boot.img.mmc'
