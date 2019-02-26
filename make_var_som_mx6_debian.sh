@@ -462,6 +462,9 @@ rm -rf /var/cache/man/??_*
 # Remove document files
 rm -rf /usr/share/doc
 
+# Set root password
+echo "root:root" | chpasswd
+
 # self kill
 rm -f third-stage
 EOF
