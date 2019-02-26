@@ -90,6 +90,7 @@ all: $(LOGDIR)
 	$(call LOG, $(MAKE) see )
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
+	$(call LOG, $(MAKE) $(OUTPUT)/$(MACHINE).dtb )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
 archive:
