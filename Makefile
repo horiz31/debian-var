@@ -64,6 +64,9 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 modules: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
 
+$(OUTPUT)/$(MACHINE).dtb: $(SRC) $(DTSI) $(SRC)/kernel/arch/arm/boot/dts/$(MACHINE).dts
+	$(SUDO) ./$(SCRIPT_NAME) -c kernel
+
 $(OUTPUT)/$(MACHINE).dts: $(OUTPUT)/$(MACHINE).dtb
 	dtc -I dtb -O dts -o $@ $<
 
