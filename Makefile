@@ -40,7 +40,7 @@ endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
 .PHONY: all clean deps docker-deploy docker-image id locale mrproper see usage
-.PHONY: archive
+.PHONY: archive modules
 
 default: usage
 
@@ -61,7 +61,7 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 #		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
 #		$(SUDO) losetup -d $$dev
 
-$(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
+modules: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
 
 $(OUTPUT)/$(MACHINE).dts: $(OUTPUT)/$(MACHINE).dtb
@@ -90,7 +90,7 @@ all: $(LOGDIR)
 	$(call LOG, $(MAKE) see )
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
-	$(call LOG, $(MAKE) $(OUTPUT)/$(MACHINE).dtb )
+	$(call LOG, $(MAKE) modules )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
 archive:
@@ -110,7 +110,7 @@ build-kernel: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 
 build-modules: $(LOGDIR)
-	$(call LOG, $(MAKE) $(OUTPUT)/$(MACHINE).dtb )
+	$(call LOG, $(MAKE) modules )
 
 build-rootfs: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
