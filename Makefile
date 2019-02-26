@@ -5,7 +5,7 @@ SHELL := /bin/bash
 CPUS := $(shell nproc)
 SUDO := $(shell test $${EUID} -ne 0 && echo "sudo")
 LANG := en_US.UTF-8
-DATE := $(shell date --iso-8601)
+DATE := $(shell date +%Y-%m-%d_%H%M)
 ARCHIVE := $(HOME)/data
 .EXPORT_ALL_VARIABLES:
 
