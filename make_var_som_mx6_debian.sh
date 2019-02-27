@@ -499,10 +499,9 @@ AcceptEnv LANG LC_*
 Subsystem sftp /usr/lib/openssh/sftp-server
 EOF
 
-mkdir -p ${ROOTFS_BASE}/root/.ssh
-cp ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
-chmod 600 ${ROOTFS_BASE}/root/.ssh/authorized_keys
-chmod 700 ${ROOTFS_BASE}/root/.ssh
+	mkdir -p ${ROOTFS_BASE}/root/.ssh
+	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
+	chmod 0700 ${ROOTFS_BASE}/root/.ssh
 
 };
 
@@ -510,8 +509,7 @@ chmod 700 ${ROOTFS_BASE}/root/.ssh
 [ "${G_USER_POSTINSTALL}" != "" ] && {
 
 	pr_info "rootfs: copy setup script"
-	cp ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
-	chmod +x ${ROOTFS_BASE}/root/${G_USER_POSTINSTALL}
+	install 0700 ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
 
 };
 
@@ -657,7 +655,7 @@ EOF
 
 ## cleanup command
 echo "#!/bin/bash
-apt-fast clean
+apt-get clean
 rm -f cleanup
 " > cleanup
 
