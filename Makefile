@@ -5,6 +5,8 @@ SHELL := /bin/bash
 CPUS := $(shell nproc)
 SUDO := $(shell test $${EUID} -ne 0 && echo "sudo")
 LANG := en_US.UTF-8
+DATE := $(shell date +%Y-%m-%d_%H%M)
+ARCHIVE := $(HOME)/data
 .EXPORT_ALL_VARIABLES:
 
 LOGDIR=$(CURDIR)/log
@@ -38,6 +40,7 @@ endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
 .PHONY: all clean deps docker-deploy docker-image id locale mrproper see usage
+.PHONY: archive modules
 
 default: usage
 
@@ -58,8 +61,11 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 #		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
 #		$(SUDO) losetup -d $$dev
 
-$(OUTPUT)/$(MACHINE).dtb: $(SRC) $(OUTPUT)/uImage
+modules: $(SRC) $(OUTPUT)/uImage
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
+
+$(OUTPUT)/$(MACHINE).dtb: $(SRC) $(DTSI) $(SRC)/kernel/arch/arm/boot/dts/$(MACHINE).dts
+	$(SUDO) ./$(SCRIPT_NAME) -c kernel
 
 $(OUTPUT)/$(MACHINE).dts: $(OUTPUT)/$(MACHINE).dtb
 	dtc -I dtb -O dts -o $@ $<
@@ -85,7 +91,20 @@ $(SRC)/kernel/.config: $(SRC) $(DEFCONFIG)
 all: $(LOGDIR)
 	$(call LOG, $(MAKE) deps )
 	$(call LOG, $(MAKE) see )
+	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
+	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
+	$(call LOG, $(MAKE) modules )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
+
+archive:
+	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)/dts
+	-mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	@( for f in $(OUTPUT)/*.dtb ; do n=$$(basename $$f) ; nb=$${n%.*} ; dtc -I dtb -O dts -o $(ARCHIVE)/$(PROJECT)-$(DATE)/dts/$${nb}.dts $$f ; done )
+	-mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	$(SUDO) tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
+	$(SUDO) chown $(USER):$(USER) $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz
+	cp -r variscite $(ARCHIVE)/$(PROJECT)-$(DATE)
+	cp $(SCRIPT_NAME) $(ARCHIVE)/$(PROJECT)-$(DATE)
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
@@ -94,7 +113,7 @@ build-kernel: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 
 build-modules: $(LOGDIR)
-	$(call LOG, $(MAKE) $(OUTPUT)/$(MACHINE).dtb )
+	$(call LOG, $(MAKE) modules )
 
 build-rootfs: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
@@ -150,6 +169,7 @@ mrproper: clean
 see:
 	@echo "CPUS=$(CPUS)"
 	@echo "SUDO=$(SUDO)"
+	@echo "ARCHIVE-TO=$(ARCHIVE)/$(PROJECT)-$(DATE)"
 	@echo "*** Build Commands ***"
 	@$(MAKE) --no-print-directory -n $(OUTPUT)/rootfs.tar.gz
 	@echo "**********************"
