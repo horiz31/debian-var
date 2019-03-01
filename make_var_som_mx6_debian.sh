@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.4"
+readonly SCRIPT_VERSION="0.5.5"
 
 
 #### Exports Variables ####
@@ -435,7 +435,11 @@ protected_install debconf
 debconf-set-selections /debconf.set
 rm -f /debconf.set
 
-protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
+# wierd things happen if these are done all at once...
+##protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
+for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
+    protected_install ${p}
+done
 
 # delete unused packages ##
 apt-get remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
@@ -479,10 +483,9 @@ AcceptEnv LANG LC_*
 Subsystem sftp /usr/lib/openssh/sftp-server
 EOF
 
-mkdir -p ${ROOTFS_BASE}/root/.ssh
-cp ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
-chmod 600 ${ROOTFS_BASE}/root/.ssh/authorized_keys
-chmod 700 ${ROOTFS_BASE}/root/.ssh
+	mkdir -p ${ROOTFS_BASE}/root/.ssh
+	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
+	chmod 0700 ${ROOTFS_BASE}/root/.ssh
 
 };
 
@@ -490,8 +493,7 @@ chmod 700 ${ROOTFS_BASE}/root/.ssh
 [ "${G_USER_POSTINSTALL}" != "" ] && {
 
 	pr_info "rootfs: copy setup script"
-	cp ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
-	chmod +x ${ROOTFS_BASE}/root/${G_USER_POSTINSTALL}
+	install 0700 ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
 
 };
 
@@ -635,7 +637,7 @@ EOF
 ## install iMX VPU libs
 	LANG=C LC_ALL=C chroot ${ROOTFS_BASE} /chroot_script_gst.sh
 
-## clenup command
+## cleanup command
 echo "#!/bin/bash
 apt-get clean
 rm -f cleanup
