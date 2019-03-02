@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.5"
+readonly SCRIPT_VERSION="0.5.6"
 
 
 #### Exports Variables ####
@@ -142,8 +142,11 @@ readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
 readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
-readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
-readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
+# TODO: following the merge, add these back in to test
+##readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
+##readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
+readonly G_USER_PACKAGES=""
+readonly G_USER_PYTHONPKGS=""
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="setup.sh"
 readonly G_USER_LOGINS=""	# was "user x_user" before
@@ -155,6 +158,7 @@ PARAM_OUTPUT_DIR="${DEF_BUILDENV}/output"
 PARAM_DEBUG="0"
 PARAM_CMD="all"
 PARAM_BLOCK_DEVICE="na"
+
 
 ### usage ###
 function usage() {
@@ -398,6 +402,9 @@ chmod +x ${ROOTFS_BASE}/usr/sbin/policy-rc.d
 ## third packages stage
 cat > third-stage << EOF
 #!/bin/bash
+# apply debconfig options
+debconf-set-selections /debconf.set
+rm -f /debconf.set
 # FIXME: a modal window comes up regarding a local modification to sshd_config
 # but there is no difference.  Try to suppress the dialog by deleting the file...
 rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
@@ -405,12 +412,13 @@ rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 function protected_install() {
+    local _name=\${*}
     local repeated_cnt=5;
     local RET_CODE=1;
 
     for (( c=0; c<\${repeated_cnt}; c++ ))
     do
-        apt-get install -y ${*} && {
+        apt-get install -y \${_name} && {
             RET_CODE=0;
             break;
         };
@@ -427,22 +435,92 @@ function protected_install() {
     return \${RET_CODE}
 }
 
+
 # update packages and install base
 apt-get update || apt-get update
-protected_install debconf
 
-# apply debconfig options
-debconf-set-selections /debconf.set
-rm -f /debconf.set
+protected_install locales
+protected_install ntp
+protected_install openssh-server
+protected_install nfs-common
+
+# packages required when flashing emmc
+protected_install dosfstools
+
+## fix config for sshd (permit root login)
+#sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
+
+# enable graphical desktop
+protected_install xorg
+protected_install xfce4
+protected_install xfce4-goodies
+
+# sound mixer & volume
+# xfce-mixer is not part of Stretch since the stable versionit depends on
+# gstreamer-0.10, no longer used
+# Stretch now uses PulseAudio and xfce4-pulseaudio-plugin is included in
+# Xfce desktop and can be added to Xfce panels.
+#protected_install xfce4-mixer
+#protected_install xfce4-volumed
+
+# network manager
+protected_install network-manager-gnome
+
+# net-tools (ifconfig, etc.)
+protected_install net-tools
+
+## fix lightdm config (added autologin x_user) ##
+sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
+sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
+
+# added alsa & alsa utilites
+protected_install alsa-utils
+protected_install gstreamer1.0-alsa
+
+# added i2c tools
+protected_install i2c-tools
+
+# added usb tools
+protected_install usbutils
+
+# added net tools
+protected_install iperf
+
+#media
+protected_install audacious
+# protected_install parole
+
+# mtd
+protected_install mtd-utils
+
+# bluetooth
+protected_install bluetooth
+protected_install bluez-obexd
+protected_install bluez-tools
+protected_install blueman
+protected_install gconf2
+
+# wifi support packages
+protected_install hostapd
+protected_install udhcpd
+
+# can support
+protected_install can-utils
 
 # wierd things happen if these are done all at once...
 ##protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
-for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
-    protected_install ${p}
-done
+# wierd things still happened when we tried to install one at a time...
+##for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
+##    protected_install ${p}
+##done
 
 # delete unused packages ##
-apt-get remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
+# probably this would be ok, but to merge back to a working state, accept this for now:
+##apt-get -y remove ${G_XORG_REMOVE} ${G_BASE_REMOVE}
+apt-get -y remove xserver-xorg-video-ati
+apt-get -y remove xserver-xorg-video-radeon
+apt-get -y remove hddtemp
+
 apt-get -y autoremove
 
 # Remove foreign man pages and locales
