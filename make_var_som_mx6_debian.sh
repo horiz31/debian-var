@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.1"
+readonly SCRIPT_VERSION="0.5.x-issue2"
 
 
 #### Exports Variables ####
@@ -42,16 +42,16 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/ksz9893-iris2"
-readonly G_LINUX_KERNEL_REV="2a88e20a8b414a21f5af5415daba033865298103"
+readonly G_LINUX_KERNEL_BRANCH="imx_4.9.88_2.0.0_ga-iris2-R0"
+readonly G_LINUX_KERNEL_REV="3de9a89f4ece74b7d3777f197ced1322aecbf437"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
-readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2.dtb imx6q-iris2-a.dtb imx6q-iris2-b.dtb imx6q-iris2-c.dtb imx6q-iris2-d.dtb imx6q-iris2-e.dtb'
+readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
-readonly G_UBOOT_GIT="https://github.com/varigit/uboot-imx.git"
-readonly G_UBOOT_BRANCH="imx_v2017.03_4.9.11_1.0.0_ga_var01"
-readonly G_UBOOT_REV="466898df5360675516bf1f014e5d48e507ae5c95"
+readonly G_UBOOT_GIT="https://github.com/uvdl/uboot-imx.git"
+readonly G_UBOOT_BRANCH="iris2"
+readonly G_UBOOT_REV="45b9d855c51753bc667de946c60d48f5b9c2f677"
 readonly G_UBOOT_DEF_CONFIG_MMC='mx6var_som_sd_config'
 readonly G_UBOOT_DEF_CONFIG_NAND='mx6var_som_nand_config'
 readonly G_UBOOT_NAME_FOR_EMMC='u-boot.img.mmc'
@@ -130,6 +130,8 @@ readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolch
 
 ############## user rootfs packages ##########
 readonly G_USER_PACKAGES=""
+readonly G_USER_PUBKEY=""
+readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -142,8 +144,8 @@ PARAM_BLOCK_DEVICE="na"
 ### usage ###
 function usage() {
 	echo "This program version ${SCRIPT_VERSION}"
-	echo " Used for make debian(${DEB_RELEASE}) image for \"var-som-mx6\" board"
-	echo " and create booted sdcard"
+	echo " Used for make debian(${DEB_RELEASE}) image for \"${G_USER_HOSTNAME}\" board"
+	echo " and create bootable sdcard"
 	echo ""
 	echo "Usage:"
 	echo " ./${SCRIPT_NAME} options"
@@ -161,14 +163,14 @@ function usage() {
 	echo "                       make and install extern modules (wifi/bt), create rootfs.tar.gz)"
 	echo "       rtar        -- generate or regenerate rootfs.tar.gz image from rootfs folder "
 	echo "       clean       -- clean all build artifacts (not delete sources code and resulted images (output folder))"
-	echo "       sdcard      -- create bootting sdcard for this device"
+	echo "       sdcard      -- create bootable sdcard for this device"
 	echo "  -o|--output -- custom select output directory (default: \"${PARAM_OUTPUT_DIR}\")"
 	echo "  -d|--dev    -- select sdcard device (exmple: -d /dev/sde)"
 	echo "  --debug     -- enable debug mode for this script"
 	echo "Examples of use:"
 	echo "  make only linux kernel for board: sudo ./${SCRIPT_NAME} --cmd kernel"
 	echo "  make only rootfs for board:       sudo ./${SCRIPT_NAME} --cmd rootfs"
-	echo "  create boot sdcard:               sudo ./${SCRIPT_NAME} --cmd sdcard --dev /dev/sdX"
+	echo "  create bootable sdcard:           sudo ./${SCRIPT_NAME} --cmd sdcard --dev /dev/sdX"
 	echo "  deploy and build:                 ./${SCRIPT_NAME} --cmd deploy && sudo ./${SCRIPT_NAME} --cmd all"
 	echo ""
 }
@@ -355,7 +357,7 @@ echo "
 # /dev/mmcblk0p1  /boot           vfat    defaults        0       0
 " > etc/fstab
 
-echo "var-som-mx6" > etc/hostname
+echo "${G_USER_HOSTNAME}" > etc/hostname
 
 echo "auto lo
 iface lo inet loopback
@@ -384,9 +386,14 @@ cat > third-stage << EOF
 # apply debconfig options
 debconf-set-selections /debconf.set
 rm -f /debconf.set
+# FIXME: a modal window comes up regarding a local modification to sshd_config
+# but there is no difference.  Try to suppress the dialog by deleting the file...
+rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
+# FIXME: same thing with lightdm.conf
+rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 function protected_install() {
-    local _name=\${1}
+    local _name=\${*}
     local repeated_cnt=5;
     local RET_CODE=1;
 
@@ -399,7 +406,7 @@ function protected_install() {
 
         echo ""
         echo "###########################"
-        echo "## Fix missing packeges ###"
+        echo "## Fix missing packages ###"
         echo "###########################"
         echo ""
 
@@ -421,8 +428,8 @@ protected_install nfs-common
 # packages required when flashing emmc
 protected_install dosfstools
 
-# fix config for sshd (permit root login)
-sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
+## fix config for sshd (permit root login)
+#sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
 
 # enable graphical desktop
 protected_install xorg
@@ -507,7 +514,7 @@ echo "user:user" | chpasswd
 echo "root:root" | chpasswd
 passwd -d x_user
 
-# sado kill
+# self kill
 rm -f third-stage
 EOF
 
@@ -515,6 +522,27 @@ EOF
 	chmod +x third-stage
 	LANG=C chroot ${ROOTFS_BASE} /third-stage
 
+	pr_info "rootfs: secure ssh"
+cat > ${ROOTFS_BASE}/etc/ssh/sshd_config << EOF
+PermitRootLogin yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+UsePAM no
+X11Forwarding yes
+PrintMotd no
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+EOF
+
+	mkdir -p ${ROOTFS_BASE}/root/.ssh
+	chmod 0700 ${ROOTFS_BASE}/root/.ssh
+
+# secure config for sshd
+[ "${G_USER_PUBKEY}" != "" ] && {
+	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
+};
 ## fourth-stage ##
 ### install variscite-bluetooth init script
 	install -m 0755 ${G_VARISCITE_PATH}/variscite-bluetooth ${ROOTFS_BASE}/etc/init.d/
@@ -601,7 +629,7 @@ rm -f user-stage
 ## install iMX VPU libs
 	LANG=C LC_ALL=C chroot ${ROOTFS_BASE} /chroot_script_gst.sh
 
-## clenup command
+## cleanup command
 echo "#!/bin/bash
 apt-get clean
 rm -f cleanup
