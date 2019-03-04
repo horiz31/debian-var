@@ -131,6 +131,8 @@ readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolch
 ############## user rootfs packages ##########
 readonly G_USER_PACKAGES=""
 readonly G_USER_PUBKEY=""
+readonly G_USER_POSTINSTALL=""
+readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
 #### Input params #####
@@ -505,14 +507,8 @@ rm -rf /var/cache/man/??_*
 # Remove document files
 rm -rf /usr/share/doc
 
-# create users and set password
-useradd -m -G audio -s /bin/bash user
-useradd -m -G audio -s /bin/bash x_user
-usermod -a -G video user
-usermod -a -G video x_user
-echo "user:user" | chpasswd
+# Set root password
 echo "root:root" | chpasswd
-passwd -d x_user
 
 # self kill
 rm -f third-stage
@@ -543,6 +539,46 @@ EOF
 [ "${G_USER_PUBKEY}" != "" ] && {
 	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
 };
+
+# post-install configuration script
+[ "${G_USER_POSTINSTALL}" != "" ] && {
+
+	pr_info "rootfs: copy setup script"
+	install 0700 ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
+
+};
+
+# create additional logins
+cat > third-stage-user-logins << EOF
+#!/bin/bash
+
+function create_user() {
+    useradd -m -G audio -s /bin/bash ${1}
+    usermod -a -G video ${1}
+    echo "${1}:${1}" | chpasswd
+}
+
+# create users and set password
+for u in ${G_USER_LOGINS} ;
+do
+    create_user ${u}
+    if [ "${u}" == "x_user" ] ;
+    then
+        ## fix lightdm config (added autologin x_user) ##
+        sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
+        sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
+        passwd -d x_user
+    fi
+done
+
+# self kill
+rm -f third-stage-user-logins
+EOF
+
+	pr_info "rootfs: create user logins (third-stage)"
+	chmod +x third-stage-user-logins
+	LANG=C chroot ${ROOTFS_BASE} /third-stage-user-logins
+
 ## fourth-stage ##
 ### install variscite-bluetooth init script
 	install -m 0755 ${G_VARISCITE_PATH}/variscite-bluetooth ${ROOTFS_BASE}/etc/init.d/
