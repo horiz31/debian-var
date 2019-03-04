@@ -149,7 +149,7 @@ readonly G_USER_PACKAGES=""
 readonly G_USER_PYTHONPKGS=""
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="setup.sh"
-readonly G_USER_LOGINS=""	# was "user x_user" before
+readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
 #### Input params #####
@@ -544,9 +544,6 @@ EOF
 	chmod +x third-stage
 	LANG=C chroot ${ROOTFS_BASE} /third-stage
 
-# secure config for sshd
-[ "${G_USER_PUBKEY}" != "" ] && {
-
 	pr_info "rootfs: secure ssh"
 cat > ${ROOTFS_BASE}/etc/ssh/sshd_config << EOF
 PermitRootLogin yes
@@ -562,9 +559,11 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 EOF
 
 	mkdir -p ${ROOTFS_BASE}/root/.ssh
-	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
 	chmod 0700 ${ROOTFS_BASE}/root/.ssh
 
+# secure config for sshd
+[ "${G_USER_PUBKEY}" != "" ] && {
+	install -m 0600 ${DEF_BUILDENV}/${G_USER_PUBKEY} ${ROOTFS_BASE}/root/.ssh/authorized_keys
 };
 
 # post-install configuration script
