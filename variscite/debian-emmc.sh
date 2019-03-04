@@ -122,6 +122,7 @@ function install_kernel
 	mkdir -p ${mountdir_prefix}${bootpart}
 	mount -t vfat ${node}${part}${bootpart}		${mountdir_prefix}${bootpart}
 	cp -v ${imagesdir}/imx6q-var-dart.dtb	${mountdir_prefix}${bootpart}/imx6q-var-dart.dtb
+	cp -v ${imagesdir}/imx6q-iris2-R0.dtb	${mountdir_prefix}${bootpart}/imx6q-iris2-R0.dtb
 	cp -v ${imagesdir}/uImage			${mountdir_prefix}${bootpart}/uImage
 	sync
 	umount ${node}${part}${bootpart}
