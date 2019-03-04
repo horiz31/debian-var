@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.6"
+readonly SCRIPT_VERSION="0.5.7"
 
 
 #### Exports Variables ####
@@ -143,10 +143,8 @@ readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
 # TODO: following the merge, add these back in to test
-##readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
-##readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
-readonly G_USER_PACKAGES=""
-readonly G_USER_PYTHONPKGS=""
+readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
+readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="setup.sh"
 readonly G_USER_LOGINS=""			# was "user x_user" before
@@ -405,11 +403,6 @@ cat > third-stage << EOF
 # apply debconfig options
 debconf-set-selections /debconf.set
 rm -f /debconf.set
-# FIXME: a modal window comes up regarding a local modification to sshd_config
-# but there is no difference.  Try to suppress the dialog by deleting the file...
-rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
-# FIXME: same thing with lightdm.conf
-rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 function protected_install() {
     local _name=\${*}
@@ -441,6 +434,9 @@ apt-get update || apt-get update
 
 protected_install locales
 protected_install ntp
+# FIXME: a modal window comes up regarding a local modification to sshd_config
+# but there is no difference.  Try to suppress the dialog by deleting the file...
+rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
 protected_install openssh-server
 protected_install nfs-common
 
@@ -448,10 +444,13 @@ protected_install nfs-common
 protected_install dosfstools
 
 ## fix config for sshd (permit root login)
+## FIXME: we are dealing with sshd separately below
 #sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
 
 # enable graphical desktop
 protected_install xorg
+# FIXME: same thing about modal window with lightdm.conf
+rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 protected_install xfce4
 protected_install xfce4-goodies
 
