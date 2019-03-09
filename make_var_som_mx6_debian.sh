@@ -294,9 +294,26 @@ function get_git_src() {
 # $1 - remote file
 # $2 - local file
 function get_remote_file() {
-	# download remote file
-	wget -c ${1} -O ${2}
-	return $?
+	local repeated_cnt=5;
+	local RET_CODE=1;
+	for (( c=0; c<\${repeated_cnt}; c++ ))
+	do
+		rm ${2}
+		wget -c ${1} -O ${2} && {
+			RET_CODE=0;
+			break;
+		};
+
+		echo ""
+		echo "###########################"
+		echo "## Retry download fail  ###"
+		echo "###########################"
+		echo ""
+
+		sleep 2;
+	done
+
+	return \${RET_CODE}
 }
 
 function make_prepare() {
