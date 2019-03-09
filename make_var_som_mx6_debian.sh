@@ -146,7 +146,7 @@ readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump"
 readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
 readonly G_USER_PUBKEY="root.pub"
-readonly G_USER_POSTINSTALL="setup.sh"
+readonly G_USER_POSTINSTALL="postinstall.sh"
 readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
