@@ -144,7 +144,7 @@ readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 ############## user rootfs packages ##########
 # TODO: following the merge, add these back in to test
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump zlib1g-dev"
-readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy"
+readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy==2.4.3rc1"
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh"
 readonly G_USER_LOGINS=""			# was "user x_user" before
