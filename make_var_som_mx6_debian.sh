@@ -453,7 +453,8 @@ protected_install locales
 protected_install ntp
 # FIXME: a modal window comes up regarding a local modification to sshd_config
 # but there is no difference.  Try to suppress the dialog by deleting the file...
-rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config
+	pr_info "rootfs: DEBUG: delete sshd_config"
+rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_config
 protected_install openssh-server
 protected_install nfs-common
 
@@ -463,12 +464,19 @@ protected_install dosfstools
 ## fix config for sshd (permit root login)
 ## FIXME: we are dealing with sshd separately below
 #sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
+	pr_info "rootfs: DEBUG: delete sshd_config (again)"
+rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_config
+
+# FIXME: same thing about modal window with lightdm.conf
+	pr_info "rootfs: DEBUG: delete lightdm.conf"
+rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 # enable graphical desktop
 protected_install xorg
-# FIXME: same thing about modal window with lightdm.conf
+	pr_info "rootfs: DEBUG: delete lightdm.conf (again)"
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 protected_install xfce4
+# FIXME: it keeps giving a modal dialog...  I bet its a double-dependency on xfce4
 protected_install xfce4-goodies
 
 # sound mixer & volume
