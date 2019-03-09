@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.7"
+readonly SCRIPT_VERSION="0.5.8"
 
 
 #### Exports Variables ####
