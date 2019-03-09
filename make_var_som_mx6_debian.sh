@@ -313,7 +313,7 @@ function get_remote_file() {
 		sleep 2;
 	done
 
-	return \${RET_CODE}
+	return ${RET_CODE}
 }
 
 function make_prepare() {
