@@ -16,13 +16,14 @@ The resulting recovery image will be found ./output/
 ```
 debian-install.sh -b dart -t cap
 ```
- 1. power off, set SW1 to EMMC and remove recovery mmc card, power up
+ 4. power off, set SW1 to EMMC and remove recovery mmc card, power up
  1. login with root:root
 ```
 ./postinstall.sh
 ```
 The hostname matches the serial number of the modem, you can get it from `/etc/hostname`
- 1. goto https://mavnet.online/setup and make sure the device is registered
+
+ 6. goto https://mavnet.online/setup and make sure the device is registered
  1. enable wifi and pick an access point
 ```
 nmcli d wifi list
