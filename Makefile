@@ -106,6 +106,7 @@ archive:
 	@( cd src/kernel && commit=$$(git log | head -1 | tr -s ' ' | cut -f2 | tr -s ' ' | cut -f2 -d' ') ; touch $(ARCHIVE)/$(PROJECT)-$(DATE)/$$commit )
 	cp -r variscite $(ARCHIVE)/$(PROJECT)-$(DATE)
 	cp $(SCRIPT_NAME) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	@( ./$(SCRIPT_NAME) --help ) > $(ARCHIVE)/$(PROJECT)-$(DATE)/readme.txt
 
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
