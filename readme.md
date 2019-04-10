@@ -23,8 +23,7 @@ debian-install.sh -b dart -t cap
 ```
 The hostname matches the serial number of the modem, you can get it from `/etc/hostname`
 
- 6. goto https://mavnet.online/setup and make sure the device is registered
- 1. enable wifi and pick an access point
+ 6. enable wifi and pick an access point
 ```
 nmcli d wifi list
 nmcli d wifi connect "your SSID" password "your PSK"
