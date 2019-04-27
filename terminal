@@ -1,0 +1,6 @@
+export COLS=${1:-80}
+export LINES=${2:-25}
+stty rows $LINES
+stty cols $COLS
+export PAGER=cat
+export EDITOR=vi

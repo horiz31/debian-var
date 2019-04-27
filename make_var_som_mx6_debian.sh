@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.8"
+readonly SCRIPT_VERSION="0.5.9"
 
 
 #### Exports Variables ####
@@ -142,11 +142,10 @@ readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
 readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
-# TODO: following the merge, add these back in to test
 readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump v4l-utils zlib1g-dev"
 readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy==2.4.3rc1"
 readonly G_USER_PUBKEY="root.pub"
-readonly G_USER_POSTINSTALL="postinstall.sh"
+readonly G_USER_POSTINSTALL="postinstall.sh terminal"
 readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
 
@@ -593,9 +592,11 @@ EOF
 # post-install configuration script
 [ "${G_USER_POSTINSTALL}" != "" ] && {
 
-	pr_info "rootfs: copy setup script"
-	install 0700 ${DEF_BUILDENV}/${G_USER_POSTINSTALL} ${ROOTFS_BASE}/root
-
+	pr_info "rootfs: copy setup script(s)"
+	for u in ${G_USER_POSTINSTALL} ;
+	do
+		install 0700 ${DEF_BUILDENV}/${u} ${ROOTFS_BASE}/root
+	done
 };
 
 # create additional logins
