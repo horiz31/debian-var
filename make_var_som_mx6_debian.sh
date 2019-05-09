@@ -43,7 +43,7 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
 readonly G_LINUX_KERNEL_BRANCH="feature/tc358743-support"
-readonly G_LINUX_KERNEL_REV="2edd8fb46ba035c8f172bc489bd679fc038d3514"
+readonly G_LINUX_KERNEL_REV="4e7c086a33f29cd9a006be20eae5c07ef04a7cb6"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
