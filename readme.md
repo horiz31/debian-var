@@ -16,7 +16,7 @@ The resulting recovery image will be found ./output/
 ```
 debian-install.sh -b dart -t cap
 ```
- 4. power off, set SW1 to EMMC and remove recovery mmc card, power up
+ 4. halt, power off, set SW1 to EMMC and remove recovery mmc card, power up
  1. login with root:root
 ```
 ./postinstall.sh
