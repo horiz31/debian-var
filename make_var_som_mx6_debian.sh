@@ -156,6 +156,10 @@ PARAM_DEBUG="0"
 PARAM_CMD="all"
 PARAM_BLOCK_DEVICE="na"
 
+# https://stackoverflow.com/questions/7156320/apt-error-file-on-system-created-by-you-or-by-a-script
+# https://serverfault.com/a/839563
+# NB: at the very least, this should be "-y"
+PARAM_APT="--yes --force-yes -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\""
 
 ### usage ###
 function usage() {
@@ -422,7 +426,7 @@ rm -f /debconf.set
 
 # https://github.com/ilikenwf/apt-fast
 apt-get update
-apt-get install -y aria2
+apt-get ${PARAM_APT} install aria2
 /bin/bash -c "$(curl -sL https://git.io/vokNn)"
 
 # self kill
@@ -469,7 +473,7 @@ function protected_install() {
 
     for (( c=0; c<\${repeated_cnt}; c++ ))
     do
-        apt-fast install -y \${_name} && {
+        apt-fast ${PARAM_APT} install \${_name} && {
             RET_CODE=0;
             break;
         };
@@ -490,17 +494,8 @@ function protected_install() {
 apt-fast update
 protected_install debconf
 
-# FIXME: a modal window comes up regarding a local modification to sshd_config
-# but there is no difference.  Try to suppress the dialog by deleting the file...
-	pr_info "rootfs: DEBUG: delete sshd_config"
-rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_config
-
-# FIXME: same thing about modal window with lightdm.conf
-	pr_info "rootfs: DEBUG: delete lightdm.conf"
-rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
-
 # 1st pass: install packages as a group
-apt-fast install -y ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
+apt-fast ${PARAM_APT} install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
 
 # 2nd pass: install packages one-at-a-time in a loop with needed retries
 for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
@@ -617,7 +612,7 @@ cat > user-stage << EOF
 apt-fast update
 
 # install all user packages
-apt-fast install -y ${G_USER_PACKAGES}
+apt-fast ${PARAM_APT} install ${G_USER_PACKAGES}
 for p in ${G_USER_PACKAGES} ; do
     protected_install \${p}
 done
@@ -641,7 +636,7 @@ cat > user-python-stage << EOF
 apt-fast update
 
 # install all user packages
-apt-fast install -y python-pip
+apt-fast ${PARAM_APT} install python-pip
 pip install ${G_USER_PYTHONPKGS}
 
 rm -f user-python-stage
