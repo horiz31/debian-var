@@ -413,7 +413,26 @@ EOF
 
 chmod +x ${ROOTFS_BASE}/usr/sbin/policy-rc.d
 
-## apt-fast configuration
+## build configuration
+cat > debian-configuration << EOF
+#!/bin/bash
+# apply debconfig options
+debconf-set-selections /debconf.set
+rm -f /debconf.set
+
+# https://github.com/ilikenwf/apt-fast
+apt-get update
+apt-get install -y aria2
+/bin/bash -c "$(curl -sL https://git.io/vokNn)"
+
+# self kill
+rm -f debian-configuration
+EOF
+
+	pr_info "rootfs: configure debian and apt-fast"
+	chmod +x debian-configuration
+	LANG=C chroot ${ROOTFS_BASE} /debian-configuration
+
 echo "
 _APTMGR=apt-get
 DOWNLOADBEFORE=true
@@ -428,17 +447,18 @@ DLDIR='/var/cache/apt/apt-fast'
 APTCACHE='/var/cache/apt/archives'
 " > etc/apt-fast.conf
 
+	if [ ! -e ${ROOTFS_BASE}/usr/local/sbin/apt-fast ] ; then
+		pr_error "rootfs: apt-fast configuration fails"
+		exit 1
+	fi
+	if ! LANG=C chroot ${ROOTFS_BASE} apt-fast --version ; then
+		pr_error "rootfs: apt-fast installation fails"
+		exit 1
+	fi
+
 ## third packages stage
 cat > third-stage << EOF
 #!/bin/bash
-# apply debconfig options
-debconf-set-selections /debconf.set
-rm -f /debconf.set
-
-# https://github.com/ilikenwf/apt-fast
-apt-get update
-apt-get install -y aria2
-/bin/bash -c "$(curl -sL https://git.io/vokNn)"
 
 function exclude() { for x in \${2} ; do if [ ! "\$x" == "\${1}" ] ; then echo \$x ; fi ; done }
 
