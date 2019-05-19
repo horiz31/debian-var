@@ -138,7 +138,7 @@ readonly G_BASE_REMOVE="hddtemp"
 # Stretch now uses PulseAudio and xfce4-pulseaudio-plugin is included in
 # Xfce desktop and can be added to Xfce panels.
 ## Add xfce4-mixer xfce4-volumed parole
-readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
+readonly G_XORG_PACKAGES="xorg xfce4 xfce4-goodies network-manager-gnome"
 readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
@@ -480,7 +480,7 @@ rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_c
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
 # 1st pass: install packages as a group
-apt-fast install -y "${G_BASE_PACKAGES}"
+apt-fast install -y ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
 
 # 2nd pass: install packages one-at-a-time in a loop with needed retries
 for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
@@ -492,7 +492,7 @@ sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.con
 sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
 
 # delete unused packages ##
-apt-fast remove -y "${G_XORG_REMOVE} ${G_BASE_REMOVE}"
+apt-fast remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
 apt-fast -y autoremove
 
 # Remove foreign man pages and locales
@@ -597,7 +597,10 @@ cat > user-stage << EOF
 apt-fast update
 
 # install all user packages
-apt-fast -y install ${G_USER_PACKAGES}
+apt-fast install -y ${G_USER_PACKAGES}
+for p in ${G_USER_PACKAGES} ; do
+    protected_install \${p}
+done
 
 rm -f user-stage
 EOF
@@ -618,7 +621,7 @@ cat > user-python-stage << EOF
 apt-fast update
 
 # install all user packages
-apt-fast -y install python-pip
+apt-fast install -y python-pip
 pip install ${G_USER_PYTHONPKGS}
 
 rm -f user-python-stage
