@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.9"
+readonly SCRIPT_VERSION="0.5.9-feature/apt-fast"
 
 
 #### Exports Variables ####
@@ -370,7 +370,7 @@ function make_debian_rootfs() {
 
 	pr_info "rootfs: generate default configs"
 	mkdir -p ${ROOTFS_BASE}/etc/sudoers.d/
-	echo "user ALL=(root) /usr/bin/apt-get, /usr/bin/dpkg, /usr/bin/vi, /sbin/reboot" > ${ROOTFS_BASE}/etc/sudoers.d/user
+	echo "user ALL=(root) /usr/bin/apt-get, /usr/local/sbin/apt-fast, /usr/bin/dpkg, /usr/bin/vi, /sbin/reboot" > ${ROOTFS_BASE}/etc/sudoers.d/user
 	chmod 0440 ${ROOTFS_BASE}/etc/sudoers.d/user
 
 ## added mirror to source list
@@ -440,6 +440,8 @@ apt-get update
 apt-get install -y aria2
 /bin/bash -c "$(curl -sL https://git.io/vokNn)"
 
+function exclude() { for x in \${2} ; do if [ ! "\$x" == "\${1}" ] ; then echo \$x ; fi ; done }
+
 function protected_install() {
     local _name=\${*}
     local repeated_cnt=5;
@@ -468,97 +470,29 @@ function protected_install() {
 apt-fast update
 protected_install debconf
 
-protected_install locales
-protected_install ntp
 # FIXME: a modal window comes up regarding a local modification to sshd_config
 # but there is no difference.  Try to suppress the dialog by deleting the file...
 	pr_info "rootfs: DEBUG: delete sshd_config"
-rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_config
-protected_install openssh-server
-protected_install nfs-common
-
-# packages required when flashing emmc
-protected_install dosfstools
-
-## fix config for sshd (permit root login)
-## FIXME: we are dealing with sshd separately below
-#sed -i -e 's/#PermitRootLogin.*/PermitRootLogin\tyes/g' /etc/ssh/sshd_config
-	pr_info "rootfs: DEBUG: delete sshd_config (again)"
 rm -f ${ROOTFS_BASE}/etc/ssh/sshd_config ${ROOTFS_BASE}/usr/share/openssh/sshd_config
 
 # FIXME: same thing about modal window with lightdm.conf
 	pr_info "rootfs: DEBUG: delete lightdm.conf"
 rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
 
-# enable graphical desktop
-protected_install xorg
-	pr_info "rootfs: DEBUG: delete lightdm.conf (again)"
-rm -f ${ROOTFS_BASE}/etc/lightdm/lightdm.conf
-protected_install xfce4
-# FIXME: it keeps giving a modal dialog...  I bet its a double-dependency on xfce4
-protected_install xfce4-goodies
+# 1st pass: install packages as a group
+apt-fast install -y "${G_BASE_PACKAGES}"
 
-# sound mixer & volume
-# xfce-mixer is not part of Stretch since the stable versionit depends on
-# gstreamer-0.10, no longer used
-# Stretch now uses PulseAudio and xfce4-pulseaudio-plugin is included in
-# Xfce desktop and can be added to Xfce panels.
-#protected_install xfce4-mixer
-#protected_install xfce4-volumed
-
-# network manager
-protected_install network-manager-gnome
-
-# net-tools (ifconfig, etc.)
-protected_install net-tools
+# 2nd pass: install packages one-at-a-time in a loop with needed retries
+for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
+    protected_install \${p}
+done
 
 ## fix lightdm config (added autologin x_user) ##
 sed -i -e 's/\#autologin-user=/autologin-user=x_user/g' /etc/lightdm/lightdm.conf
 sed -i -e 's/\#autologin-user-timeout=0/autologin-user-timeout=0/g' /etc/lightdm/lightdm.conf
 
-# added alsa & alsa utilites
-protected_install alsa-utils
-protected_install gstreamer1.0-alsa
-
-# added i2c tools
-protected_install i2c-tools
-
-# added usb tools
-protected_install usbutils
-
-# added net tools
-protected_install iperf
-
-#media
-protected_install audacious
-# protected_install parole
-
-# mtd
-protected_install mtd-utils
-
-# bluetooth
-protected_install bluetooth
-protected_install bluez-obexd
-protected_install bluez-tools
-protected_install blueman
-protected_install gconf2
-
-# wifi support packages
-protected_install hostapd
-protected_install udhcpd
-
-# can support
-protected_install can-utils
-
-# wierd things happen if these are done all at once...
-##protected_install ${G_BASE_PACKAGES} ${G_XORG_PACKAGES}
-# wierd things still happened when we tried to install one at a time...
-##for p in ${G_BASE_PACKAGES} ${G_XORG_PACKAGES} ; do
-##    protected_install ${p}
-##done
-
 # delete unused packages ##
-apt-fast remove -y ${G_XORG_REMOVE} ${G_BASE_REMOVE}
+apt-fast remove -y "${G_XORG_REMOVE} ${G_BASE_REMOVE}"
 apt-fast -y autoremove
 
 # Remove foreign man pages and locales
