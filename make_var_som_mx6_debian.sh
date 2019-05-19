@@ -42,8 +42,8 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="imx_4.9.88_2.0.0_ga-iris2-R0"
-readonly G_LINUX_KERNEL_REV="08c4ec24e397635bd54c219f2bfc7cf6053dfd0a"
+readonly G_LINUX_KERNEL_BRANCH="feature/iris2"
+readonly G_LINUX_KERNEL_REV="03869f68e9a55cb588972280ea98538a1d8d9ee5"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb'
 
