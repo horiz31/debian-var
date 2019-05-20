@@ -15,7 +15,7 @@ set -e
 
 SCRIPT_NAME=${0##*/}
 CPUS=`nproc`
-readonly SCRIPT_VERSION="0.5.9"
+readonly SCRIPT_VERSION="0.5.10"
 
 
 #### Exports Variables ####
@@ -655,6 +655,11 @@ EOF
 
 	chmod +x user-stage
 	LANG=C chroot ${ROOTFS_BASE} /user-stage
+
+### install iris2-ksz9893 init script
+	install -m 0755 ${DEF_BUILDENV}/patches/iris2-ksz9897 ${ROOTFS_BASE}/etc/init.d/
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d iris2-ksz9897 defaults
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d iris2-ksz9897 enable 2 3 4 5
 
 };
 

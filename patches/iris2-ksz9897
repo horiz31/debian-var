@@ -1,0 +1,21 @@
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          iris2-ksz9897
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+DESC=iris2-ksz9897
+
+. /lib/lsb/init-functions
+
+SPI=/sys/bus/spi/devices
+SWREG=$SPI/spi0.0/sw/reg
+CONFIG=0x5b
+
+# set register to enable KSZ9893 switch
+log_daemon_msg "echo 0x3301=$CONFIG > $SWREG"
+echo 0x3301=$CONFIG > $SWREG
+
+exit 0
