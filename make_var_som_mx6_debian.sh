@@ -42,8 +42,8 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/iris2"
-readonly G_LINUX_KERNEL_REV="3981686d877ad7cd7f60ef937a9983705fd2b1ef"
+readonly G_LINUX_KERNEL_BRANCH="project/pps"
+readonly G_LINUX_KERNEL_REV="1d7f92bb4685bf9f0691121623f42c47f8903b97"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb imx6q-iris2-R1.dtb'
 
@@ -129,7 +129,7 @@ readonly G_CROSS_COMPILER_JOPTION="-j ${CPUS}"
 readonly G_EXT_CROSS_COMPILER_LINK="http://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/arm-linux-gnueabihf/${G_CROSS_COMPILER_ARCHIVE}"
 
 ############## base rootfs packages ##########
-readonly G_BASE_PACKAGES="locales ntp openssh-server nfs-common dosfstools network-manager net-tools alsa-utils gstreamer1.0-alsa i2c-tools usbutils iperf audacious mtd-utils bluetooth bluez-obexd bluez-tools blueman gconf2 hostapd udhcpd can-utils"
+readonly G_BASE_PACKAGES="locales ntpsec gpsd gpsd-clients openssh-server nfs-common dosfstools network-manager net-tools alsa-utils gstreamer1.0-alsa i2c-tools usbutils iperf audacious mtd-utils bluetooth bluez-obexd bluez-tools blueman gconf2 hostapd udhcpd can-utils"
 readonly G_BASE_REMOVE="hddtemp"
 
 # sound mixer & volume
