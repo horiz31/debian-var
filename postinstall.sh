@@ -11,7 +11,7 @@ cat /etc/hostname
 passwd
 # disable services that slow down boot and interfere with operations
 for s in $SERVICES ; do
-	do systemctl disable --now ${s} ; done
+	systemctl disable --now ${s}
 done
 # configure wifi chip and load initial firmware
 ( cd /usr/sbin/wlconf && ./configure-device.sh ) <<EOF
