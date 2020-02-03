@@ -42,16 +42,16 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/iris2"
-readonly G_LINUX_KERNEL_REV="6ee1f3f7f02bc2ff04245701026d8088377e310f"
+readonly G_LINUX_KERNEL_BRANCH="feature/develop"
+readonly G_LINUX_KERNEL_REV="cd07caba17787e348f27dc397573853045ec59fb"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_iris2_defconfig'
-readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb imx6q-iris2-R1.dtb'
+readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb imx6q-iris2-R1.dtb imx6q-nightcrawler-R0.dtb'
 
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
 readonly G_UBOOT_GIT="https://github.com/uvdl/uboot-imx.git"
-readonly G_UBOOT_BRANCH="iris2"
-readonly G_UBOOT_REV="45b9d855c51753bc667de946c60d48f5b9c2f677"
+readonly G_UBOOT_BRANCH="nightcrawler"
+readonly G_UBOOT_REV="abc51ec8ad651aad5713e49a67f13f265a57653f"
 readonly G_UBOOT_DEF_CONFIG_MMC='mx6var_som_sd_config'
 readonly G_UBOOT_DEF_CONFIG_NAND='mx6var_som_nand_config'
 readonly G_UBOOT_NAME_FOR_EMMC='u-boot.img.mmc'
@@ -147,7 +147,8 @@ readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh terminal"
 readonly G_USER_LOGINS=""			# was "user x_user" before
-readonly G_USER_HOSTNAME="iris2"	# was "var-som-mx6"
+readonly G_USER_HOSTNAME="nightcrawler"
+readonly G_USER_INIT_KSZ="init-ksz8794" # copy patches/x to /etc/init.d/x
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -656,11 +657,12 @@ EOF
 	chmod +x user-stage
 	LANG=C chroot ${ROOTFS_BASE} /user-stage
 
-### install iris2-ksz9893 init script
-	install -m 0755 ${DEF_BUILDENV}/patches/iris2-ksz9897 ${ROOTFS_BASE}/etc/init.d/
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d iris2-ksz9897 defaults
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d iris2-ksz9897 enable 2 3 4 5
+### install custom KSZ-switch init script
+	install -m 0755 ${DEF_BUILDENV}/patches/${G_USER_INIT_KSZ} ${ROOTFS_BASE}/etc/init.d/
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d ${G_USER_INIT_KSZ} defaults
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d ${G_USER_INIT_KSZ} enable 2 3 4 5
 
+# FIXME: shouldn't this be above and only install the KSZ-switch if G_USER_INIT_KSZ is non-blank?
 };
 
 [ "${G_USER_PYTHONPKGS}" != "" ] && {
