@@ -1,12 +1,12 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
-# Provides:          iris2-ksz9897
+# Provides:          init-ksz9897
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:
 ### END INIT INFO
-DESC=iris2-ksz9897
+DESC=init-ksz9897
 
 . /lib/lsb/init-functions
 
