@@ -6,7 +6,7 @@ CPUS := $(shell nproc)
 SUDO := $(shell test $${EUID} -ne 0 && echo "sudo")
 LANG := en_US.UTF-8
 DATE := $(shell date +%Y-%m-%d_%H%M)
-ARCHIVE := $(HOME)/data
+ARCHIVE := /opt
 .EXPORT_ALL_VARIABLES:
 
 LOGDIR=$(CURDIR)/log
@@ -20,7 +20,7 @@ coreutils texi2html bc docbook-utils python-pysqlite2 help2man make gcc g++ \
 desktop-file-utils libgl1-mesa-dev libglu1-mesa-dev mercurial automake groff curl \
 lzop asciidoc u-boot-tools mtd-utils device-tree-compiler
 PLATFORM_GIT=https://github.com/uvdl/debian-var.git
-PLATFORM_BRANCH=iris2
+PLATFORM_BRANCH=nightcrawler
 PROJECT=debian-uvdl
 PROJECT_REMOTE := $(USER)
 PROJECT_TAG := core
@@ -29,7 +29,7 @@ SCRIPT_NAME=make_var_som_mx6_debian.sh
 SD_SIZE_IN_GB=4
 SRC=$(CURDIR)/src
 DTSI=$(SRC)/kernel/arch/arm/boot/dts/imx6qdl-var-dart.dtsi
-DEFCONFIG=$(SRC)/kernel/arch/arm/configs/imx_v7_iris2_defconfig	# matches G_LINUX_KERNEL_DEF_CONFIG
+DEFCONFIG=$(SRC)/kernel/arch/arm/configs/imx_v7_nightcrawler_defconfig	# matches G_LINUX_KERNEL_DEF_CONFIG
 
 # https://stackoverflow.com/questions/16488581/looking-for-well-logged-make-output
 # Invoke this with $(call LOG,<cmdline>)
