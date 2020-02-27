@@ -142,7 +142,7 @@ readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
 readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
-readonly G_USER_PACKAGES="build-essential git gawk htop libxml2-dev libxslt-dev python-pip rsync screen sqlite3 tcpdump v4l-utils zlib1g-dev"
+readonly G_USER_PACKAGES="bc build-essential device-tree-compiler git gawk htop libxml2-dev libxslt-dev lzop python-pip rsync screen sqlite3 tcpdump v4l-utils u-boot-tools zlib1g-dev"
 readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy==2.4.3rc1"
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh terminal"
