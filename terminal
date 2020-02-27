@@ -1,6 +1,8 @@
 export COLS=${1:-80}
 export LINES=${2:-25}
+title=${3:-$(hostname)}
 stty rows $LINES
 stty cols $COLS
 export PAGER=cat
 export EDITOR=vi
+echo -ne "\033]0;$title\007"
