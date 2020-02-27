@@ -177,6 +177,12 @@ see:
 	@echo "**********************"
 	@echo "Use: \"make all\" to perform this build"
 
+update: $(LOGDIR)
+	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
+	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
+	$(call LOG, $(MAKE) modules )
+	$(SUDO) ./$(SCRIPT_NAME) -c rtar
+
 define USAGE
 	@echo "Usage:"
 	@echo " make <target>"
@@ -197,6 +203,7 @@ define USAGE
 	@echo "  id            -- setup git global values"
 	@echo "  locale        -- configure locale settings (needed for YOCTO builds)"
 	@echo "  see           -- report configuration settings"
+	@echo "  update        -- rebuild u-boot/kernel/modules and regenerate rootfs tar ball"
 	@echo ""
 endef
 
