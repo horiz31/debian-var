@@ -148,7 +148,7 @@ readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh terminal"
 readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="nightcrawler"
-readonly G_USER_INIT_KSZ="init-ksz8794" # copy patches/x to /etc/init.d/x
+readonly G_USER_INIT_KSZ="init-ksz8795" # copy patches/x to /etc/init.d/x
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
