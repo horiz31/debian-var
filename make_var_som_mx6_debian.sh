@@ -42,8 +42,8 @@ readonly G_VARISCITE_PATH="${DEF_BUILDENV}/variscite"
 ## LINUX kernel: git, config, paths and etc
 readonly G_LINUX_KERNEL_SRC_DIR="${DEF_SRC_DIR}/kernel"
 readonly G_LINUX_KERNEL_GIT="https://github.com/uvdl/linux-imx.git"
-readonly G_LINUX_KERNEL_BRANCH="feature/develop"
-readonly G_LINUX_KERNEL_REV="3d1072eaba50e416435317b726b232e78b1f26bf"
+readonly G_LINUX_KERNEL_BRANCH="feature/ksz-modules"
+readonly G_LINUX_KERNEL_REV="2b312affe3ae72541e039475a0d6c803155eff6f"
 readonly G_LINUX_KERNEL_DEF_CONFIG='imx_v7_nightcrawler_defconfig'
 readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb imx6q-iris2-R1.dtb imx6q-nightcrawler-R0.dtb'
 
