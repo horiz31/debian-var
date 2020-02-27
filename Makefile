@@ -52,6 +52,13 @@ $(OUTPUT):
 
 $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 	$(SUDO) ./$(SCRIPT_NAME) -c rootfs
+	# need to repair rootfs/lib/modules/$(uname -r)/{build,source} to /usr/src/kernel
+	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel && \
+		$(SUDO) cp -r $(SRC)/kernel $(CURDIR)/rootfs/usr/src/kernel && \
+		v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
+		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} && \
+		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/build && \
+		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/source
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
 
 #$(OUTPUT)/sd.img: $(SRC) $(OUTPUT) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/rootfs.tar.gz
@@ -181,6 +188,13 @@ update: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 	$(call LOG, $(MAKE) modules )
+	# need to repair rootfs/lib/modules/$(uname -r)/{build,source} to /usr/src/kernel
+	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel && \
+		$(SUDO) cp -r $(SRC)/kernel $(CURDIR)/rootfs/usr/src/kernel && \
+		v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
+		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} && \
+		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/build && \
+		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/source
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
 
 define USAGE
