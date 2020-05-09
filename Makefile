@@ -20,7 +20,7 @@ coreutils texi2html bc docbook-utils python-pysqlite2 help2man make gcc g++ \
 desktop-file-utils libgl1-mesa-dev libglu1-mesa-dev mercurial automake groff curl \
 lzop asciidoc u-boot-tools mtd-utils device-tree-compiler
 PLATFORM_GIT=https://github.com/uvdl/debian-var.git
-PLATFORM_BRANCH=nightcrawler
+PLATFORM_BRANCH=iris2
 PROJECT=debian-uvdl
 PROJECT_REMOTE := $(USER)
 PROJECT_TAG := core

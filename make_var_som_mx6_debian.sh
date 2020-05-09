@@ -50,8 +50,8 @@ readonly G_LINUX_DTB='imx6q-var-dart.dtb imx6q-iris2-R0.dtb imx6q-iris2-R1.dtb i
 ## uboot
 readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
 readonly G_UBOOT_GIT="https://github.com/uvdl/uboot-imx.git"
-readonly G_UBOOT_BRANCH="nightcrawler"
-readonly G_UBOOT_REV="ee1ded2559d3077b466586c9c527c17c09312a1f"
+readonly G_UBOOT_BRANCH="iris2"
+readonly G_UBOOT_REV="be0a5b60a4bd1286c216b9900f46b2d63a8a0a1f"
 readonly G_UBOOT_DEF_CONFIG_MMC='mx6var_som_sd_config'
 readonly G_UBOOT_DEF_CONFIG_NAND='mx6var_som_nand_config'
 readonly G_UBOOT_NAME_FOR_EMMC='u-boot.img.mmc'
@@ -147,8 +147,8 @@ readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh terminal"
 readonly G_USER_LOGINS=""			# was "user x_user" before
-readonly G_USER_HOSTNAME="nightcrawler"
-readonly G_USER_INIT_KSZ="init-ksz8795" # copy patches/x to /etc/init.d/x
+readonly G_USER_HOSTNAME="iris2"
+readonly G_USER_INIT_PATCHES="init-ksz8795 init-ksz9897" # copy patches/x to /etc/init.d/x
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -657,12 +657,29 @@ EOF
 	chmod +x user-stage
 	LANG=C chroot ${ROOTFS_BASE} /user-stage
 
-### install custom KSZ-switch init script
-	install -m 0755 ${DEF_BUILDENV}/patches/${G_USER_INIT_KSZ} ${ROOTFS_BASE}/etc/init.d/
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d ${G_USER_INIT_KSZ} defaults
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d ${G_USER_INIT_KSZ} enable 2 3 4 5
+};
 
-# FIXME: shouldn't this be above and only install the KSZ-switch if G_USER_INIT_KSZ is non-blank?
+[ "${G_USER_INIT_PATCHES}" != "" ] && {
+
+	pr_info "rootfs: install user init patches (user-stage)"
+	pr_info "rootfs: G_USER_INIT_PATCHES \"${G_USER_INIT_PATCHES}\" "
+
+cat > user-init-stage << EOF
+#!/bin/bash
+
+for u in ${G_USER_INIT_PATCHES} ;
+do
+	install -m 0755 ${DEF_BUILDENV}/patches/$u ${ROOTFS_BASE}/etc/init.d/
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d $u defaults
+	LANG=C chroot ${ROOTFS_BASE} update-rc.d $u enable 2 3 4 5
+done
+
+rm -f user-init-stage
+EOF
+
+	chmod +x user-init-stage
+	LANG=C chroot ${ROOTFS_BASE} /user-init-stage
+
 };
 
 [ "${G_USER_PYTHONPKGS}" != "" ] && {

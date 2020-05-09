@@ -16,9 +16,14 @@ CONFIG=0x5b
 
 case $1 in
 	start)
-		# set register to enable KSZ9893 switch
-		log_daemon_msg "echo 0x3301=$CONFIG > $SWREG"
-		echo 0x3301=$CONFIG > $SWREG
+		# load module (looks like the first time it fails)
+		modprobe -v spi-ksz9897
+		rmmod spi-ksz9897
+		if modprobe -v spi-ksz9897 ; then
+			# set register to enable KSZ9893 switch
+			log_daemon_msg "echo 0x3301=$CONFIG > $SWREG"
+			echo 0x3301=$CONFIG > $SWREG
+		fi
 		;;
 	*)
 		;;
