@@ -106,8 +106,9 @@ all: $(LOGDIR)
 archive:
 	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)/dts
 	-mv $(LOGDIR) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	@mkdir -p $(LOGDIR)
 	@( for f in $(OUTPUT)/*.dtb ; do n=$$(basename $$f) ; nb=$${n%.*} ; dtc -I dtb -O dts -o $(ARCHIVE)/$(PROJECT)-$(DATE)/dts/$${nb}.dts $$f ; cp $$f $(ARCHIVE)/$(PROJECT)-$(DATE)/dts/$${nb}.dtb ; done )
-	-mv $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
+	cp -r $(OUTPUT) $(ARCHIVE)/$(PROJECT)-$(DATE)
 	$(SUDO) tar czf $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz -C src kernel
 	$(SUDO) chown $(USER):$(USER) $(ARCHIVE)/$(PROJECT)-$(DATE)/kernel.tgz
 	@( cd src/kernel && commit=$$(git log | head -1 | tr -s ' ' | cut -f2 | tr -s ' ' | cut -f2 -d' ') ; touch $(ARCHIVE)/$(PROJECT)-$(DATE)/$$commit )
