@@ -35,12 +35,13 @@ DEFCONFIG=$(SRC)/kernel/arch/arm/configs/imx_v7_nightcrawler_defconfig	# matches
 # Invoke this with $(call LOG,<cmdline>)
 define LOG
   @echo "$$(date --iso-8601='ns'): $1 started." >>$(LOGDIR)/make.log
-  ($1) 2>&1 | tee -a $(LOGDIR)/build.log && echo "$$(date --iso-8601='ns'): $1 completed." >>$(LOGDIR)/make.log
+  ($1) 2>&1 | tee -a $(LOGDIR)/build.log
+  echo "$$(date --iso-8601='ns'): $1 completed." >>$(LOGDIR)/make.log
 endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
-.PHONY: all clean deps docker-deploy docker-image id locale mrproper see usage
-.PHONY: archive modules
+.PHONY: all check clean deps docker-deploy docker-image id locale mrproper see usage
+.PHONY: archive
 
 default: usage
 
@@ -50,7 +51,7 @@ $(LOGDIR):
 $(OUTPUT):
 	mkdir -p $(OUTPUT)
 
-$(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
+$(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTPUT)/modules.tar.gz
 	$(SUDO) ./$(SCRIPT_NAME) -c rootfs
 	# need to repair rootfs/lib/modules/$(uname -r)/{build,source} to /usr/src/kernel
 	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel && \
@@ -68,8 +69,12 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb
 #		$(SUDO) ./$(SCRIPT_NAME) -c sdcard -d $$dev && \
 #		$(SUDO) losetup -d $$dev
 
-modules: $(SRC) $(OUTPUT)/uImage
+$(OUTPUT)/modules.tar.gz: $(SRC) $(OUTPUT)/uImage
+	v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
+		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} && \
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
+	v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
+		$(SUDO) tar czf $@ -C $(CURDIR)/rootfs/lib/modules $$v
 
 $(OUTPUT)/$(MACHINE).dtb: $(SRC) $(DTSI) $(SRC)/kernel/arch/arm/boot/dts/$(MACHINE).dts
 	$(SUDO) ./$(SCRIPT_NAME) -c kernel
@@ -100,8 +105,14 @@ all: $(LOGDIR)
 	$(call LOG, $(MAKE) see )
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
-	$(call LOG, $(MAKE) modules )
+	$(call LOG, $(MAKE) $(OUTPUT)/modules.tar.gz )
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
+
+##check: $(LOGDIR) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage
+check: $(LOGDIR)
+	$(MAKE) --no-print-directory build-bootloader
+	$(MAKE) --no-print-directory build-kernel
+	$(MAKE) --no-print-directory build-modules
 
 archive:
 	@mkdir -p $(ARCHIVE)/$(PROJECT)-$(DATE)/dts
@@ -119,16 +130,19 @@ archive:
 build-bootloader: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
 
+build-deps: $(LOGDIR)
+	$(call LOG, $(MAKE) deps )
+
 build-kernel: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
 
 build-modules: $(LOGDIR)
-	$(call LOG, $(MAKE) modules )
+	$(call LOG, $(MAKE) $(OUTPUT)/modules.tar.gz )
 
 build-rootfs: $(LOGDIR)
 	$(call LOG, $(MAKE) $(OUTPUT)/rootfs.tar.gz )
 
-build-sdcard: $(LOGDIR) $(SRC) $(OUTPUT)/rootfs.tar.gz
+build-sdcard: $(LOGDIR) $(SRC) $(OUTPUT)/u-boot.img.mmc $(OUTPUT)/uImage $(OUTPUT)/rootfs.tar.gz
 #	$(call LOG, $(MAKE) $(OUTPUT)/sd.img )
 	@echo "Use: \"$(SUDO) ./$(SCRIPT_NAME) -c sdcard /dev/sdX\" to flash the image."
 
@@ -186,9 +200,9 @@ see:
 	@echo "Use: \"make all\" to perform this build"
 
 update: $(LOGDIR)
-	$(call LOG, $(MAKE) $(OUTPUT)/u-boot.img.mmc )
-	$(call LOG, $(MAKE) $(OUTPUT)/uImage )
-	$(call LOG, $(MAKE) modules )
+	$(MAKE) --no-print-directory build-bootloader
+	$(MAKE) --no-print-directory build-kernel
+	$(MAKE) --no-print-directory build-modules
 	# need to repair rootfs/lib/modules/$(uname -r)/{build,source} to /usr/src/kernel
 	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel && \
 		$(SUDO) cp -r $(SRC)/kernel $(CURDIR)/rootfs/usr/src/kernel && \
