@@ -981,12 +981,12 @@ function make_uboot() {
 	make ARCH=arm -C ${1} CROSS_COMPILE=${G_CROSS_COMPILER_PATH}/${G_CROSS_COMPILER_PREFIX} ${G_CROSS_COMPILER_JOPTION}
 
 	# copy images
-	cp ${1}/SPL ${2}/${G_SPL_NAME_FOR_NAND}
-	cp ${1}/u-boot.img ${2}/${G_UBOOT_NAME_FOR_NAND}
+	cp ${1}/SPL ${2}/${G_SPL_NAME_FOR_NAND} && \
+	cp ${1}/u-boot.img ${2}/${G_UBOOT_NAME_FOR_NAND} || { return 1; }
 
 	# make fw_printenv
 	make env ARCH=arm -C ${1} CROSS_COMPILE=${G_CROSS_COMPILER_PATH}/${G_CROSS_COMPILER_PREFIX} ${G_CROSS_COMPILER_JOPTION}
-	cp ${1}/tools/env/fw_printenv ${2}
+	cp ${1}/tools/env/fw_printenv ${2} || { return 1; }
 
 	return 0;
 }
@@ -1474,78 +1474,77 @@ function cmd_make_clean() {
 	exit 1;
 };
 
-V_RET_CODE=0;
+V_RET_CODE=1;
 
 pr_info "Command: \"$PARAM_CMD\" start..."
 
 case $PARAM_CMD in
 	deploy )
-		cmd_make_deploy || {
-			V_RET_CODE=1;
-		};
+		cmd_make_deploy && {
+			V_RET_CODE=0;
+		}
 		;;
 	rootfs )
-		cmd_make_rootfs || {
-			V_RET_CODE=1;
-		};
+		cmd_make_rootfs && {
+			V_RET_CODE=0;
+		}
 		;;
 	bootloader )
-		cmd_make_uboot || {
-			V_RET_CODE=1;
+		cmd_make_uboot && {
+			V_RET_CODE=0;
 		}
 		;;
 	kernel )
-		cmd_make_kernel || {
-			V_RET_CODE=1;
-		};
+		cmd_make_kernel && {
+			V_RET_CODE=0;
+		}
 		;;
 	kernel_defconfig )
-                cmd_make_kernel_defconfig || {
-                        V_RET_CODE=1;
-                };
+                cmd_make_kernel_defconfig && {
+                        V_RET_CODE=0;
+                }
                 ;;
 	kernel_menuconfig )
-                cmd_make_kernel_menuconfig || {
-                        V_RET_CODE=1;
-                };
+                cmd_make_kernel_menuconfig && {
+                        V_RET_CODE=0;
+                }
                 ;;
 	modules )
-		cmd_make_kmodules || {
-			V_RET_CODE=1;
-		};
+		cmd_make_kmodules && {
+			V_RET_CODE=0;
+		}
 		;;
 	sdcard )
-		cmd_make_sdcard || {
-			V_RET_CODE=1;
-		};
+		cmd_make_sdcard && {
+			V_RET_CODE=0;
+		}
 		;;
 	rtar )
-		cmd_make_rfs_tar || {
-			V_RET_CODE=1;
-		};
+		cmd_make_rfs_tar && {
+			V_RET_CODE=0;
+		}
 		;;
 	all )
-		(cmd_make_uboot  &&
-		 cmd_make_kernel_defconfig &&
-		 cmd_make_kernel &&
-		 cmd_make_kmodules &&
-		 cmd_make_rootfs) || {
-			V_RET_CODE=1;
-		};
+		cmd_make_uboot &&
+		cmd_make_kernel_defconfig &&
+		cmd_make_kernel &&
+		cmd_make_kmodules &&
+		cmd_make_rootfs && {
+			V_RET_CODE=0;
+		}
 		;;
 	clean )
-		cmd_make_clean || {
-			V_RET_CODE=1;
-		};
+		cmd_make_clean && {
+			V_RET_CODE=0;
+		}
 		;;
 	clean_kernel )
-		cmd_make_clean_kernel || {
-			V_RET_CODE=1;
-		};
+		cmd_make_clean_kernel && {
+			V_RET_CODE=0;
+		}
 		;;
 	* )
 		pr_error "Invalid input command: \"${PARAM_CMD}\"";
-		V_RET_CODE=1;
 		;;
 esac
 
