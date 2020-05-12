@@ -156,17 +156,19 @@ deps:
 	$(SUDO) apt-get install -y $(PKGDEPS1)
 	$(SUDO) apt-get install -y $(PKGDEPS2)
 
+# https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai/1098881#1098881
+# https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
 Dockerfile: Makefile
-	@echo "FROM ubuntu:16.04" > $@
+	@echo "FROM ubuntu:18.04" > $@
+	@echo "ARG DEBIAN_FRONTEND=noninteractive" >> $@
 	@echo "RUN apt-get -y update && apt-get -y upgrade" >> $@
-	@echo "RUN apt-get -y install git make sudo vim" >> $@
-ifeq ($(PROJECT_TAG),base)
-	@echo "RUN apt-get -y install $(PKGDEPS1) && apt-get -y install $(PKGDEPS2)" >> $@
-endif
-	@echo "RUN apt-get -y install locales && locale-gen $(LANG) && update-locale LC ALL=$(LANG) LANG=$(LANG)" >> $@
-	@echo "WORKDIR /home/$(PROJECT)" >> $@
-	@echo "COPY . /home/$(PROJECT)" >> $@
-	@echo "CMD \"$(SHELL)\"" >> $@
+	@echo "RUN apt-get -y install apt-utils git make sudo vim wget" >> $@
+	@echo "RUN apt-get -y install $(PKGDEPS1)" >> $@
+	@echo "RUN apt-get -y install $(PKGDEPS2)" >> $@
+
+# build under docker
+docker-build-bootloader: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/u-boot.img.mmc
 
 docker-deploy: docker-image
 	docker tag $(PROJECT):$(PROJECT_TAG) $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
