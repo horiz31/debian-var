@@ -174,7 +174,19 @@ docker-deploy: docker-image
 	docker tag $(PROJECT):$(PROJECT_TAG) $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
 	docker push $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
 
-docker-image: Dockerfile
+docker-deps:
+	@if ! docker --version ; then \
+		$(SUDO) apt-get -y update ; \
+		$(SUDO) apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common ; \
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $(SUDO) apt-key add - && \
+			$(SUDO) apt-key fingerprint 0EBFCD88 && \
+			$(SUDO) add-apt-repository \
+				"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" ; \
+		$(SUDO) apt-get -y update ; \
+		$(SUDO) apt-get install -y docker-ce docker-ce-cli containerd.io ; \
+	fi
+
+docker-image: Dockerfile docker-deps
 	docker build -t $(PROJECT):$(PROJECT_TAG) .
 
 id:
