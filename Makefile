@@ -181,9 +181,15 @@ docker-deps:
 		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $(SUDO) apt-key add - && \
 			$(SUDO) apt-key fingerprint 0EBFCD88 && \
 			$(SUDO) add-apt-repository \
-				"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" ; \
+				"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell lsb_release -cs) stable" ; \
 		$(SUDO) apt-get -y update ; \
 		$(SUDO) apt-get install -y docker-ce docker-ce-cli containerd.io ; \
+		$(SUDO) usermod -a -G docker $(USER) ; \
+		docker --version ; \
+	fi
+	@if ! docker images -a ; then \
+		$(SUDO) usermod -a -G docker $(USER) ; \
+		echo "*** please execute: \"newgrp docker\" in your shell" ; \
 	fi
 
 docker-image: Dockerfile docker-deps
