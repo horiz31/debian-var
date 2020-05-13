@@ -40,7 +40,9 @@ define LOG
 endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
-.PHONY: all check clean deps docker-deploy docker-image id locale mrproper see usage
+.PHONY: docker-build-all docker-build-bootloader docker-build-kernel docker-build-modules docker-build-rootfs
+.PHONY: docker-deploy docker-deps docker-image
+.PHONY: all check clean deps id locale mrproper see usage
 .PHONY: archive
 
 default: usage
@@ -167,8 +169,28 @@ Dockerfile: Makefile
 	@echo "RUN apt-get -y install $(PKGDEPS2)" >> $@
 
 # build under docker
+docker-build-all: $(LOGDIR) docker-image
+	$(MAKE) --no-print-directory clean
+	$(MAKE) --no-print-directory docker-build-bootloader
+	@file $(OUTPUT)/u-boot.img.mmc
+	$(MAKE) --no-print-directory docker-build-kernel
+	@file $(OUTPUT)/uImage
+	$(MAKE) --no-print-directory docker-build-modules
+	@file $(OUTPUT)/modules.tar.gz
+	$(MAKE) --no-print-directory docker-build-rootfs
+	@file $(OUTPUT)/rootfs.tar.gz
+
 docker-build-bootloader: $(LOGDIR)
 	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/u-boot.img.mmc
+
+docker-build-kernel: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/uImage
+
+docker-build-modules: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/modules.tar.gz
+
+docker-build-rootfs: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/rootfs.tar.gz
 
 docker-deploy: docker-image
 	docker tag $(PROJECT):$(PROJECT_TAG) $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
