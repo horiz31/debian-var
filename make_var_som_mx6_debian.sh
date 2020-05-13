@@ -637,7 +637,7 @@ EOF
 	LANG=C chroot ${ROOTFS_BASE} update-rc.d variscite-bluetooth defaults
 	LANG=C chroot ${ROOTFS_BASE} update-rc.d variscite-bluetooth enable 2 3 4 5
 
-## end packages stage ##
+### install user-added system packages
 [ "${G_USER_PACKAGES}" != "" ] && {
 
 	pr_info "rootfs: install user defined packages (user-stage)"
@@ -659,29 +659,21 @@ EOF
 
 };
 
+### install user-added init scripts
 [ "${G_USER_INIT_PATCHES}" != "" ] && {
 
 	pr_info "rootfs: install user init patches (user-stage)"
 	pr_info "rootfs: G_USER_INIT_PATCHES \"${G_USER_INIT_PATCHES}\" "
 
-cat > user-init-stage << EOF
-#!/bin/bash
-
-for u in ${G_USER_INIT_PATCHES} ;
-do
-	install -m 0755 ${DEF_BUILDENV}/patches/$u ${ROOTFS_BASE}/etc/init.d/
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d $u defaults
-	LANG=C chroot ${ROOTFS_BASE} update-rc.d $u enable 2 3 4 5
-done
-
-rm -f user-init-stage
-EOF
-
-	chmod +x user-init-stage
-	LANG=C chroot ${ROOTFS_BASE} /user-init-stage
-
+	for u in ${G_USER_INIT_PATCHES} ;
+	do
+	    install -m 0755 ${DEF_BUILDENV}/patches/${u} ${ROOTFS_BASE}/etc/init.d/
+	    LANG=C chroot ${ROOTFS_BASE} update-rc.d ${u} defaults
+	    LANG=C chroot ${ROOTFS_BASE} update-rc.d ${u} enable 2 3 4 5
+	done
 };
 
+### install user-added python packages
 [ "${G_USER_PYTHONPKGS}" != "" ] && {
 
 	pr_info "rootfs: install user python packages (user-stage)"
