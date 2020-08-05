@@ -52,6 +52,7 @@ readonly G_UBOOT_SRC_DIR="${DEF_SRC_DIR}/uboot"
 readonly G_UBOOT_GIT="https://github.com/uvdl/uboot-imx.git"
 readonly G_UBOOT_BRANCH="iris2"
 readonly G_UBOOT_REV="7a70a5b5fe517a89391c309d801a0a2e9fd06c5f"
+
 readonly G_UBOOT_DEF_CONFIG_MMC='mx6var_som_sd_config'
 readonly G_UBOOT_DEF_CONFIG_NAND='mx6var_som_nand_config'
 readonly G_UBOOT_NAME_FOR_EMMC='u-boot.img.mmc'
@@ -111,12 +112,12 @@ readonly G_IMX_XORG_DRV_GIT_BRANCH="imx_exa_viv6_g2d"
 readonly G_IMX_XORG_DRV_GIT_SRCREV="946e8603ed9a52f36d305405dbb2ab8ff90943d0"
 # replacement for Freescale's closed-development libfslvapwrapper library
 readonly G_IMX_VPU_API_SRC_DIR="${DEF_SRC_DIR}/imx/libimxvpuapi"
-readonly G_IMX_VPU_API_GIT="git://github.com/Freescale/libimxvpuapi.git"
+readonly G_IMX_VPU_API_GIT="https://github.com/Freescale/libimxvpuapi.git"
 readonly G_IMX_VPU_API_GIT_BRANCH="master"
 readonly G_IMX_VPU_API_GIT_SRCREV="4afb52f97e28c731c903a8538bf99e4a6d155b42"
 # much more standard replacement for Freescale's imx-gst1.0-plugin
 readonly G_IMX_GSTREAMER_SRC_DIR="${DEF_SRC_DIR}/imx/gstreamer-imx"
-readonly G_IMX_GSTREAMER_GIT="git://github.com/Freescale/gstreamer-imx.git"
+readonly G_IMX_GSTREAMER_GIT="https://github.com/Freescale/gstreamer-imx.git"
 readonly G_IMX_GSTREAMER_GIT_BRANCH="master"
 readonly G_IMX_GSTREAMER_GIT_SRCREV="889b8352ca09cd224be6a2f8d53efd59a38fa9cb"
 
@@ -157,6 +158,7 @@ PARAM_OUTPUT_DIR="${DEF_BUILDENV}/output"
 PARAM_DEBUG="0"
 PARAM_CMD="all"
 PARAM_BLOCK_DEVICE="na"
+
 
 ### usage ###
 function usage() {
@@ -294,26 +296,9 @@ function get_git_src() {
 # $1 - remote file
 # $2 - local file
 function get_remote_file() {
-	local repeated_cnt=5;
-	local RET_CODE=1;
-	for (( c=0; c<${repeated_cnt}; c++ ))
-	do
-		rm ${2}
-		wget -c ${1} -O ${2} && {
-			RET_CODE=0;
-			break;
-		};
-
-		echo ""
-		echo "###########################"
-		echo "## Retry download fail  ###"
-		echo "###########################"
-		echo ""
-
-		sleep 2;
-	done
-
-	return ${RET_CODE}
+	# download remote file
+	wget -c ${1} -O ${2}
+	return $?
 }
 
 function make_prepare() {
@@ -706,6 +691,10 @@ EOF
 	install -m 0644 ${G_VARISCITE_PATH}/wallpaper.png \
 		${ROOTFS_BASE}/usr/share/images/desktop-base/default
 
+## disable light-locker
+	install -m 0755 ${G_VARISCITE_PATH}/disable-lightlocker ${ROOTFS_BASE}/usr/local/bin/
+	install -m 0644 ${G_VARISCITE_PATH}/disable-lightlocker.desktop ${ROOTFS_BASE}/etc/xdg/autostart/
+
 ## added alsa default configs ##
 	install -m 0644 ${G_VARISCITE_PATH}/asound.state ${ROOTFS_BASE}/var/lib/alsa/
 	install -m 0644 ${G_VARISCITE_PATH}/asound.conf ${ROOTFS_BASE}/etc/
@@ -799,6 +788,7 @@ rm -f cleanup
 function make_tarbar() {
 	cd $1
 
+	chown root:root .
 	pr_info "make tarbar arx from folder ${1}"
 	pr_info "Remove old arx $2"
 	rm $2 > /dev/null 2>&1 && :;
@@ -1504,15 +1494,15 @@ case $PARAM_CMD in
 		}
 		;;
 	kernel_defconfig )
-                cmd_make_kernel_defconfig && {
-                        V_RET_CODE=0;
-                }
-                ;;
+		cmd_make_kernel_defconfig && {
+			V_RET_CODE=0;
+		}
+		;;
 	kernel_menuconfig )
-                cmd_make_kernel_menuconfig && {
-                        V_RET_CODE=0;
-                }
-                ;;
+		cmd_make_kernel_menuconfig && {
+			V_RET_CODE=0;
+		}
+		;;
 	modules )
 		cmd_make_kmodules && {
 			V_RET_CODE=0;
