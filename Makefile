@@ -40,7 +40,9 @@ define LOG
 endef
 
 .PHONY: build-bootloader build-kernel build-modules build-rootfs build-sdcard
-.PHONY: all check clean deps docker-deploy docker-image id locale mrproper see usage
+.PHONY: docker-build-all docker-build-bootloader docker-build-kernel docker-build-modules docker-build-rootfs
+.PHONY: docker-deploy docker-deps docker-image
+.PHONY: all check clean deps id locale mrproper see usage
 .PHONY: archive
 
 default: usage
@@ -156,23 +158,63 @@ deps:
 	$(SUDO) apt-get install -y $(PKGDEPS1)
 	$(SUDO) apt-get install -y $(PKGDEPS2)
 
+# https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai/1098881#1098881
+# https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
 Dockerfile: Makefile
-	@echo "FROM ubuntu:16.04" > $@
+	@echo "FROM ubuntu:18.04" > $@
+	@echo "ARG DEBIAN_FRONTEND=noninteractive" >> $@
 	@echo "RUN apt-get -y update && apt-get -y upgrade" >> $@
-	@echo "RUN apt-get -y install git make sudo vim" >> $@
-ifeq ($(PROJECT_TAG),base)
-	@echo "RUN apt-get -y install $(PKGDEPS1) && apt-get -y install $(PKGDEPS2)" >> $@
-endif
-	@echo "RUN apt-get -y install locales && locale-gen $(LANG) && update-locale LC ALL=$(LANG) LANG=$(LANG)" >> $@
-	@echo "WORKDIR /home/$(PROJECT)" >> $@
-	@echo "COPY . /home/$(PROJECT)" >> $@
-	@echo "CMD \"$(SHELL)\"" >> $@
+	@echo "RUN apt-get -y install apt-utils git make sudo vim wget" >> $@
+	@echo "RUN apt-get -y install $(PKGDEPS1)" >> $@
+	@echo "RUN apt-get -y install $(PKGDEPS2)" >> $@
+
+# build under docker
+docker-build-all: $(LOGDIR) docker-image
+	$(MAKE) --no-print-directory clean
+	$(MAKE) --no-print-directory docker-build-bootloader
+	@file $(OUTPUT)/u-boot.img.mmc
+	$(MAKE) --no-print-directory docker-build-kernel
+	@file $(OUTPUT)/uImage
+	$(MAKE) --no-print-directory docker-build-modules
+	@file $(OUTPUT)/modules.tar.gz
+	$(MAKE) --no-print-directory docker-build-rootfs
+	@file $(OUTPUT)/rootfs.tar.gz
+
+docker-build-bootloader: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/u-boot.img.mmc
+
+docker-build-kernel: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/uImage
+
+docker-build-modules: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/modules.tar.gz
+
+docker-build-rootfs: $(LOGDIR)
+	docker run -v $(CURDIR):/mnt -it $(PROJECT):$(PROJECT_TAG) make -C /mnt LOGDIR=/mnt/log OUTPUT=/mnt/output SRC=/mnt/src /mnt/output/rootfs.tar.gz
 
 docker-deploy: docker-image
 	docker tag $(PROJECT):$(PROJECT_TAG) $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
 	docker push $(PROJECT_REMOTE)/$(PROJECT):$(PROJECT_TAG)
 
-docker-image: Dockerfile
+docker-deps:
+	@if ! docker --version ; then \
+		$(SUDO) apt-get -y update ; \
+		$(SUDO) apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common ; \
+		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $(SUDO) apt-key add - && \
+			$(SUDO) apt-key fingerprint 0EBFCD88 && \
+			$(SUDO) add-apt-repository \
+				"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell lsb_release -cs) stable" ; \
+		$(SUDO) apt-get -y update ; \
+		$(SUDO) apt-get install -y docker-ce docker-ce-cli containerd.io ; \
+		$(SUDO) usermod -a -G docker $(USER) ; \
+		docker --version ; \
+	fi
+	@if ! docker images -a ; then \
+		$(SUDO) usermod -a -G docker $(USER) ; \
+		echo "*** please execute: \"newgrp docker\" in your shell" ; \
+	fi
+
+docker-image: Dockerfile docker-deps
 	docker build -t $(PROJECT):$(PROJECT_TAG) .
 
 id:

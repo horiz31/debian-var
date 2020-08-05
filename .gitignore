@@ -71,6 +71,10 @@ toolchain
 tmp
 log
 
+# generated files
+Dockerfile
+
+# editor droppings
 *.orig
 *~
 \#*#
