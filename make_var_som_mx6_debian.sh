@@ -142,13 +142,14 @@ readonly G_XORG_PACKAGES=""	# "xorg xfce4 xfce4-goodies network-manager-gnome"
 readonly G_XORG_REMOVE="xserver-xorg-video-ati xserver-xorg-video-radeon"
 
 ############## user rootfs packages ##########
-readonly G_USER_PACKAGES="bc build-essential device-tree-compiler git gawk htop libxml2-dev libxslt-dev lzop python-pip rsync screen sqlite3 tcpdump v4l-utils u-boot-tools zlib1g-dev"
-readonly G_USER_PYTHONPKGS="future lxml netifaces pexpect piexif pygeodesy pymap3d pynmea2 pyserial scapy==2.4.3rc1"
+readonly G_USER_PACKAGES="bc build-essential device-tree-compiler git gawk htop libxml2-dev libxslt-dev lzop python3 python3-dateutil python3-numpy python3-pip python3-serial rsync screen sqlite3 sudo tcpdump v4l-utils u-boot-tools zlib1g-dev"
+readonly G_USER_PYTHONPKGS="future netifaces pexpect piexif pygeodesy pymap3d pynmea2 pytz scapy"
 readonly G_USER_PUBKEY="root.pub"
 readonly G_USER_POSTINSTALL="postinstall.sh terminal"
 readonly G_USER_LOGINS=""			# was "user x_user" before
 readonly G_USER_HOSTNAME="iris2"
 readonly G_USER_INIT_PATCHES="init-ksz8795 init-ksz9897" # copy patches/x to /etc/init.d/x
+readonly G_USER_DISABLE_SERVICES="ModemManager lightdm hostapd variscite-bluetooth NetworkManager-wait-online"
 
 #### Input params #####
 PARAM_DEB_LOCAL_MIRROR="${DEF_DEBIAN_MIRROR}"
@@ -156,7 +157,6 @@ PARAM_OUTPUT_DIR="${DEF_BUILDENV}/output"
 PARAM_DEBUG="0"
 PARAM_CMD="all"
 PARAM_BLOCK_DEVICE="na"
-
 
 ### usage ###
 function usage() {
@@ -685,8 +685,8 @@ cat > user-python-stage << EOF
 apt-get update
 
 # install all user packages
-apt-get -y install python-pip
-pip install ${G_USER_PYTHONPKGS}
+apt-get -y install python3-pip
+pip3 install ${G_USER_PYTHONPKGS}
 
 rm -f user-python-stage
 EOF
@@ -754,6 +754,18 @@ EOF
 
 ## install iMX VPU libs
 	LANG=C LC_ALL=C chroot ${ROOTFS_BASE} /chroot_script_gst.sh
+
+### disable services that the user does not want running
+[ "${G_USER_DISABLE_SERVICES}" != "" ] && {
+
+	pr_info "rootfs: disable services the user does not want (user-stage)"
+	pr_info "rootfs: G_USER_DISABLE_SERVICES \"${G_USER_DISABLE_SERVICES}\" "
+
+	for u in ${G_USER_DISABLE_SERVICES} ;
+	do
+	    LANG=C chroot ${ROOTFS_BASE} systemctl disable ${u}
+	done
+};
 
 ## cleanup command
 echo "#!/bin/bash
