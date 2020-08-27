@@ -70,8 +70,6 @@ $(OUTPUT)/rootfs.tar.gz: $(SRC) $(OUTPUT)/uImage $(OUTPUT)/$(MACHINE).dtb $(OUTP
 #		$(SUDO) losetup -d $$dev
 
 $(OUTPUT)/modules.tar.gz: $(SRC) $(OUTPUT)/uImage
-	v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
-		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} && \
 	$(SUDO) ./$(SCRIPT_NAME) -c modules
 	v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
 		$(SUDO) tar czf $@ -C $(CURDIR)/rootfs/lib/modules $$v
@@ -204,10 +202,10 @@ update: $(LOGDIR)
 	$(MAKE) --no-print-directory build-kernel
 	$(MAKE) --no-print-directory build-modules
 	# need to repair rootfs/lib/modules/$(uname -r)/{build,source} to /usr/src/kernel
-	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel && \
+	$(SUDO) rm -rf $(CURDIR)/rootfs/usr/src/kernel ; \
 		$(SUDO) cp -r $(SRC)/kernel $(CURDIR)/rootfs/usr/src/kernel && \
 		v=$(shell ls $(CURDIR)/rootfs/lib/modules | head -1) && \
-		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} && \
+		$(SUDO) rm $(CURDIR)/rootfs/lib/modules/$$v/{build,source} ; \
 		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/build && \
 		$(SUDO) ln -s /usr/src/kernel $(CURDIR)/rootfs/lib/modules/$$v/source
 	$(SUDO) ./$(SCRIPT_NAME) -c rtar
